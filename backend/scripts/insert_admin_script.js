@@ -32,31 +32,34 @@ async function run() {
     await sequelize.authenticate();
     console.log('Database connected.');
 
-    const name = 'gkadmin';
-    const email = 'admin@gmail.com';
-    const password = '@gk213';
-    const phone = '0000000000';
+    const admins = [
+      { name: 'GK Healthcare', email: 'gkhealthcare@gmail.com', password: '440412', phone: '1111111111' },
+      { name: 'Dlevith', email: 'dlevith@gmail.com', password: '7004189', phone: '2222222222' },
+      { name: 'Mounesh', email: 'mounesh@gmail.com', password: '445862', phone: '3333333333' },
+      { name: 'Chandrama', email: 'chandrama@gmail.com', password: '778455', phone: '4444444444' }
+    ];
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    for (const admin of admins) {
+      const hashedPassword = await bcrypt.hash(admin.password, 10);
+      const [user, created] = await User.findOrCreate({
+        where: { email: admin.email },
+        defaults: {
+          name: admin.name,
+          phone: admin.phone,
+          password: hashedPassword,
+          userType: 'admin'
+        }
+      });
 
-    const [user, created] = await User.findOrCreate({
-      where: { email },
-      defaults: {
-        name,
-        phone,
-        password: hashedPassword,
-        userType: 'admin'
+      if (created) {
+        console.log(`Admin ${admin.email} created successfully.`);
+      } else {
+        user.password = hashedPassword;
+        user.name = admin.name;
+        user.userType = 'admin';
+        await user.save();
+        console.log(`Admin ${admin.email} updated.`);
       }
-    });
-
-    if (created) {
-      console.log('Admin user created successfully.');
-    } else {
-      user.password = hashedPassword;
-      user.name = name;
-      user.userType = 'admin';
-      await user.save();
-      console.log('Admin user updated (password/name refreshed).');
     }
 
     process.exit(0);

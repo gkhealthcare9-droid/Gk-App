@@ -27,6 +27,11 @@ const ProductRoute = require('./Routes/Product/Product');
 const VendorEmployeesRoute = require('./Routes/Vendor/VendorEmployee');
 const InstallationReportRoute = require('./Routes/Reports/InstallationReport');
 const CustomerProductRoute = require('./Routes/CustomerProduct/CustomerProduct');
+const StatsRoute = require('./Routes/Dashboard/Stats');
+const ImportRoute = require('./Routes/Import/ExcelImport');
+const CategoryRoute = require('./Routes/Classification/Category');
+const LocationRoute = require('./Routes/Location/Location');
+const SeedRoute = require('./Routes/Utility/SeedData');
 
 app.use('/api/v1/user', UserRoute);
 app.use('/api/v1/customer', CustomerRoute);
@@ -41,6 +46,11 @@ app.use('/api/v1/customer/payment', CustomerOutstandingRoute);
 app.use('/api/v1/lead', LeadRoute);
 app.use('/api/v1/lead/followup', LeadFollowup);
 app.use('/api/v1/installation-report', InstallationReportRoute);
+app.use('/api/v1/stats', StatsRoute);
+app.use('/api/v1/import', ImportRoute);
+app.use('/api/v1/category', CategoryRoute);
+app.use('/api/v1/location', LocationRoute);
+app.use('/api/v1/seed', SeedRoute);
 
 app.get('/', (req, res) => {
   res.send('Welcome to the server!');
