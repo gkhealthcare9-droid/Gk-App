@@ -1,0 +1,12 @@
+{
+  "name": "frontend-web-server",
+  "version": "1.0.0",
+  "description": "Simple express server for serving the Flutter web build on Railway.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

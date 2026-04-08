@@ -19,3 +19,8 @@ build/
 *.swp
 *.swo
 *.DS_Store
+
+# Git Backups
+.git_backup/
+**/.git_backup/
+fix_ids.js
