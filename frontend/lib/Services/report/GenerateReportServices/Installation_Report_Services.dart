@@ -1,25 +1,13 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../Models/report/GenerateReports/Installation_Report_Model.dart';
-import '../../../Utils/Appconstants.dart';
+import '../../../../Models/report/GenerateReports/Installation_Report_Model.dart';
+import '../../../../Utils/Appconstants.dart';
+import '../../ApiService.dart';
 
 class InstallationReportService {
-  final Dio _dio = Dio();
-
-  InstallationReportService() {
-    _dio.options.baseUrl = AppConstants.BASE_URL;
-  }
+  final Dio _dio = ApiService().dio;
 
   Future<Response> addInstallation(PostInstallationReport report) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null || token.isEmpty) throw Exception('Session expired, please login again.');
-
-      // Add auth token to headers
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
       // Prepare form data
       FormData formData = FormData.fromMap(await report.toMultipartMap());
 
@@ -39,17 +27,10 @@ class InstallationReportService {
     }
   }
 
-  Future<List<FetchInstallationReport >?> fetchinstallationreport() async {
+  Future<List<FetchInstallationReport>?> fetchinstallationreport() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
       final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.INSTALLATIONREPORT}',
+        AppConstants.INSTALLATIONREPORT,
       );
 
       if (response.statusCode == 200) {
@@ -74,5 +55,4 @@ class InstallationReportService {
       return null;
     }
   }
-
 }

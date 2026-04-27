@@ -5,6 +5,7 @@ import 'package:sales_grow/Models/Employee/add_vendor_employee_model.dart';
 import 'package:sales_grow/Views/Widgets/CustomButton.dart';
 import 'package:sales_grow/Views/Widgets/CustomDropDown.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
+import '../Widgets/CustomAlert.dart';
 
 import '../../Controllers/AddVendor/vendor_controller.dart';
 
@@ -84,19 +85,19 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
     final phone = phoneController.text.trim();
 
     if (name.isEmpty) {
-      Get.snackbar('Validation Error', 'Name is required');
+      CustomAlert.showError(context: context, message: 'Name is required');
       return;
     }
     if (phone.isEmpty) {
-      Get.snackbar('Validation Error', 'Phone number is required');
+      CustomAlert.showError(context: context, message: 'Phone number is required');
       return;
     }
     if (selectedDob == null) {
-      Get.snackbar('Validation Error', 'Please select Date of Birth');
+      CustomAlert.showError(context: context, message: 'Please select Date of Birth');
       return;
     }
     if (selectedPositionId == null) {
-      Get.snackbar('Validation Error', 'Please select a position');
+      CustomAlert.showError(context: context, message: 'Please select a position');
       return;
     }
 
@@ -112,12 +113,13 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
     // Call the controller’s edit method
     _vendorController
         .editVendorEmployee(widget.employee.id!, updatedEmployee)
-        .then((_) {
-          // Success is handled in the controller with a snackbar and navigation
+        .then((_) async {
+          CustomAlert.showSuccess(context: context, message: 'Employee updated successfully');
+          await Future.delayed(const Duration(seconds: 2));
           Get.back(); // Pop back to the previous screen
         })
         .catchError((e) {
-          Get.snackbar('Error', 'Failed to update employee: $e');
+          CustomAlert.showError(context: context, message: 'Failed to update employee: $e');
         });
   }
 

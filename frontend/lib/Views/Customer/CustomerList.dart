@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:sales_grow/Controllers/Location/Location_controller.dart';
 import 'package:sales_grow/Controllers/AddCustomer/Customer_controller.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
 import 'package:sales_grow/Utils/Colors.dart';
 import 'package:sales_grow/Views/Customer/CustomerView.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:get/get.dart';
+import 'package:sales_grow/Views/Customer/AddCustomer.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 
 class CustomersList extends StatefulWidget {
   const CustomersList({super.key});
@@ -15,6 +18,7 @@ class CustomersList extends StatefulWidget {
 
 class _CustomersListState extends State<CustomersList> {
   late final CustomerController _customerController;
+  late final LocationController _locationController;
   final RxString _searchQuery = ''.obs;
   final TextEditingController _searchCtrl = TextEditingController();
   final RxString _selectedState = ''.obs;
@@ -25,8 +29,9 @@ class _CustomersListState extends State<CustomersList> {
     super.initState();
     try {
       _customerController = Get.find<CustomerController>();
+      _locationController = Get.put(LocationController());
     } catch (e) {
-      Get.snackbar('Error', 'CustomerController not found. Please try again.');
+      CustomAlert.error('Controllers not found. Please try again.');
       Get.back();
       return;
     }
@@ -36,25 +41,20 @@ class _CustomersListState extends State<CustomersList> {
       _searchQuery.value = _searchCtrl.text;
     });
   }
+
   List<String> get _allCities {
-    final list = _customerController.customers
-    // if a state is chosen, limit to that state
-        .where((c) => _selectedState.value.isEmpty
-        ? true
-        : (c.state?.toLowerCase() == _selectedState.value.toLowerCase()))
-        .map((c) => c.city?.trim() ?? '')
-        .where((s) => s.isNotEmpty)
-        .toSet()
+    if (_locationController.filteredCities.isEmpty) return [];
+    final list = _locationController.filteredCities
+        .map((c) => c['name'].toString())
         .toList();
     list.sort();
     return list;
   }
 
   List<String> get _allStates {
-    final all = _customerController.customers
-        .map((c) => c.state?.trim() ?? '')
-        .where((s) => s.isNotEmpty)
-        .toSet()
+    if (_locationController.states.isEmpty) return [];
+    final all = _locationController.states
+        .map((s) => s['name'].toString())
         .toList();
     all.sort();
     return all;
@@ -141,6 +141,16 @@ class _CustomersListState extends State<CustomersList> {
       appBar: CustomAppBar(
         title: 'Customers',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_upload, color: Colors.black),
+            onPressed: () => _customerController.importExcel(),
+            tooltip: 'Import Excel',
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_add, color: Colors.black),
+            onPressed: () => Get.to(() => const AddCustomerScreen())?.then((_) => _customerController.fetchCustomers()),
+            tooltip: 'Add Customer',
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
@@ -178,8 +188,8 @@ class _CustomersListState extends State<CustomersList> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        isExpanded: true,  // ← add this
-                        initialValue: _selectedState.value.isEmpty ? null : _selectedState.value,
+                        isExpanded: true,
+                        value: _selectedState.value.isEmpty ? null : _selectedState.value,
                         decoration: InputDecoration(
                           hintText: 'Filter by State',
                           border: OutlineInputBorder(
@@ -194,14 +204,23 @@ class _CustomersListState extends State<CustomersList> {
                         onChanged: (v) {
                           _selectedState.value = v ?? '';
                           _selectedCity.value = '';
+                          _locationController.filteredCities.clear();
+                          if (_selectedState.value.isNotEmpty) {
+                            final stateData = _locationController.states.firstWhere(
+                                (s) => s['name'] == _selectedState.value,
+                                orElse: () => null);
+                            if (stateData != null) {
+                              _locationController.fetchCitiesByState(stateData['id']);
+                            }
+                          }
                         },
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        isExpanded: true,  // ← and this
-                        initialValue: _selectedCity.value.isEmpty ? null : _selectedCity.value,
+                        isExpanded: true,
+                        value: _selectedCity.value.isEmpty ? null : _selectedCity.value,
                         decoration: InputDecoration(
                           hintText: 'Filter by City',
                           border: OutlineInputBorder(
@@ -290,13 +309,22 @@ class _CustomersListState extends State<CustomersList> {
                         leading: CircleAvatar(
                           backgroundColor: Colors.blue,
                           child: Text(
-                            c.customerName?.isNotEmpty ?? false
-                                ? c.customerName![0].toUpperCase()
-                                : '?',
+                            (c.customerCompany?.isNotEmpty ?? false)
+                                ? c.customerCompany![0].toUpperCase()
+                                : (c.customerName?.isNotEmpty ?? false)
+                                    ? c.customerName![0].toUpperCase()
+                                    : '?',
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
-                        title: _highlight(c.customerCompany),
+                        title: Text(
+                          (c.customerCompany?.isNotEmpty ?? false)
+                              ? c.customerCompany!
+                              : (c.customerName?.isNotEmpty ?? false)
+                                  ? c.customerName!
+                                  : 'N/A',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         childrenPadding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         children: [
@@ -305,19 +333,17 @@ class _CustomersListState extends State<CustomersList> {
                           _buildDetailRow(
                               Icons.business, 'Company Name', _highlight(c.customerCompany)),
                           _buildDetailRow(
-                              Icons.business, 'Comany Website', _highlight(c.customerCompany)),
+                              Icons.phone, 'Primary Phone', _highlight(c.customerPhone)),
                           _buildDetailRow(
-                              Icons.call, 'Phone no ', _highlight(c.customerPhone)),_buildDetailRow(
-                              Icons.call, 'Phone no ', _highlight(c.customerPhone2)),
+                              Icons.contact_phone, 'Secondary Phone', _highlight(c.customerPhone2)),
                           _buildDetailRow(
                               Icons.email, 'Email', _highlight(c.customerEmail)),
-
                           _buildDetailRow(
-                              Icons.fingerprint, 'GSTIN', _highlight(c.customerGSTIN)),
-                          _buildDetailRow(Icons.fingerprint, 'Customer ID',
-                              _highlight(c.customerQuniqueNumber)),
+                              Icons.receipt, 'GSTIN', _highlight(c.customerGSTIN)),
+                          _buildDetailRow(Icons.badge, 'Customer ID',
+                              _highlight('GK-${c.customerQuniqueNumber?.replaceAll('GK-', '') ?? ''}')),
                           _buildDetailRow(
-                            Icons.home,
+                            Icons.location_on,
                             'Address',
                             _highlight(
                                 '${c.addressOne ?? ''}, ${c.addressTwo ?? ''}, ${c.city ?? ''}, ${c.state ?? ''} - ${c.pincode ?? ''}'),
@@ -335,5 +361,5 @@ class _CustomersListState extends State<CustomersList> {
       ),
 
     );
-  }
+}
 }

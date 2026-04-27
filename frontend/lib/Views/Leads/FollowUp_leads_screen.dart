@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../Controllers/Leads/Leads_Controller.dart';
 import '../../Models/Leads/Leads_Model.dart';
+import '../Widgets/CustomAlert.dart';
 
 class FollowUpDetailScreen extends StatefulWidget {
   final String leadId;
@@ -151,13 +152,7 @@ class _FollowUpDetailScreenState extends State<FollowUpDetailScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (selectedDateTime == null || notesController.text.trim().isEmpty) {
-                          Get.snackbar(
-                            'Error',
-                            'Please select a date/time and enter notes',
-                            backgroundColor: Colors.redAccent,
-                            colorText: Colors.white,
-                            snackPosition: SnackPosition.TOP,
-                          );
+                          CustomAlert.error('Please select a date/time and enter notes');
                           return;
                         }
 
@@ -168,23 +163,12 @@ class _FollowUpDetailScreenState extends State<FollowUpDetailScreen> {
                         );
 
                         if (success) {
+                          CustomAlert.success('Follow-up added successfully');
+                          await Future.delayed(const Duration(seconds: 2));
                           Get.back();
                           await leadController.leadFollowups(widget.leadId);
-                          Get.snackbar(
-                            'Success',
-                            'Follow-up added successfully',
-                            backgroundColor: Colors.green,
-                            colorText: Colors.white,
-                            snackPosition: SnackPosition.TOP,
-                          );
                         } else {
-                          Get.snackbar(
-                            'Error',
-                            'Failed to add follow-up',
-                            backgroundColor: Colors.redAccent,
-                            colorText: Colors.white,
-                            snackPosition: SnackPosition.TOP,
-                          );
+                          CustomAlert.error('Failed to add follow-up');
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -221,15 +205,9 @@ class _FollowUpDetailScreenState extends State<FollowUpDetailScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.lightBlue, size: 15),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1E293B), size: 20),
+          onPressed: () => Get.back(),
         ),
         backgroundColor: Colors.lightBlue.shade100,
         elevation: 0,

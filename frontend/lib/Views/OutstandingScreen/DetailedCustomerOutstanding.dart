@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../../Utils/Colors.dart';
 import 'package:sales_grow/Controllers/AddCustomer/Customer_controller.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 
 class Detailedcustomeroutstanding extends StatefulWidget {
   final String customerId;
@@ -28,6 +30,10 @@ class _DetailedcustomeroutstandingState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primaryBlue, size: 20),
+          onPressed: () => Get.back(),
+        ),
         title: const Text("Customer Outstanding"),
         centerTitle: true,
       ),
@@ -204,7 +210,7 @@ class _DetailedcustomeroutstandingState
               if (amount == null ||
                   invoiceCtrl.text.isEmpty ||
                   descCtrl.text.isEmpty) {
-                Get.snackbar("Error", "Please fill all fields correctly");
+                CustomAlert.error("Please fill all fields correctly");
                 return;
               }
 
@@ -219,7 +225,7 @@ class _DetailedcustomeroutstandingState
               await _controller.fetchAllCustomerOutstanding(widget.customerId);
 
               Get.back();
-              Get.snackbar("Success", type == 'credit'
+              CustomAlert.success(type == 'credit'
                   ? 'Payment received successfully'
                   : 'Outstanding added successfully');
             },

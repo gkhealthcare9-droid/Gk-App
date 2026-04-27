@@ -1,13 +1,18 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:sales_grow/Helpers/download_helper.dart'
+    if (dart.library.html) 'package:sales_grow/Helpers/download_helper_web.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
-import 'package:sales_grow/Models/Employee/AddEmployee_model.dart';
 import 'package:sales_grow/Models/Outstanding/Outstanding_model.dart';
 import 'package:sales_grow/Views/Widgets/CustomBottomNav.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
+import 'package:sales_grow/Views/Customer/CustomerList.dart';
 
 import '../../Models/Category/getcategory_model.dart';
-import '../../Models/Outstanding/Customer_outstanding_model.dart';
-import '../../Services/customer/Customer_services.dart';
+import 'package:sales_grow/Models/CustomerContact/CustomerContactModel.dart';
+import 'package:sales_grow/Models/Outstanding/Customer_outstanding_model.dart';
+import 'package:sales_grow/Services/customer/Customer_services.dart';
 
 class CustomerController extends GetxController {
   var isLoading = false.obs;
@@ -20,8 +25,15 @@ class CustomerController extends GetxController {
   var dueOnly = false.obs;
   var customers = <CustomerModel>[].obs;
   var customer = CustomerModel().obs;
-  var employees = <GetEmployeeModel>[].obs;
-  var categoryList = <GetCategoryModel>[].obs; // ✅ Define the list here
+  var hospitalContacts =
+      <GetCustomerContactModel>[].obs; // Renamed from employees
+  var contactPositionList =
+      <ContactPositionModel>[].obs; // Renamed from categoryList
+  var employeeCategories = <GetCategoryModel>[].obs; // For internal staff
+
+  // Legacy Getters to support unmigrated views
+  RxList<GetCustomerContactModel> get employees => hospitalContacts;
+  RxList<ContactPositionModel> get categoryList => contactPositionList;
   final CustomerServices _customerServices = CustomerServices();
   final RxBool isCustomerFound = false.obs;
 
@@ -37,9 +49,15 @@ class CustomerController extends GetxController {
       ).obs;
   var alloutstanding = <OutstandingModel>[].obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+    fetchCustomers();
+  }
+
   void clearData() {
     customers.clear();
-    employees.clear();
+    hospitalContacts.clear();
 
     isLoading.value = false;
   }
@@ -90,19 +108,56 @@ class CustomerController extends GetxController {
     filterOutstandingList();
   }
 
-  Future<void> fetchCategories() async {
-    if (isLoading.value) return;
-
+  Future<void> addContactPosition(String position) async {
     isLoading.value = true;
     try {
-      final fetched = await _customerServices.fetchCategory();
-      if (fetched != null) {
-        categoryList.assignAll(fetched); // ✅ This now works
+      final response = await _customerServices.addContactPosition(position);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        CustomAlert.success('Position added successfully');
+        await fetchContactPositions();
       } else {
-        Get.snackbar("Error", "No category data found");
+        CustomAlert.error('Failed to add position');
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch categories: $e");
+      CustomAlert.error('Error adding position: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  var isPositionsLoading = false.obs;
+
+  Future<void> fetchContactPositions() async {
+    isPositionsLoading.value = true;
+    try {
+      final fetched = await _customerServices.fetchContactPositions();
+      if (fetched != null) {
+        contactPositionList.assignAll(fetched);
+      } else {
+        CustomAlert.error("No position data found");
+      }
+    } catch (e) {
+      CustomAlert.error("Failed to fetch positions: $e");
+    } finally {
+      isPositionsLoading.value = false;
+    }
+  }
+
+  // Keep for legacy compatibility if needed
+  Future<void> fetchCategories() async {
+    await fetchContactPositions();
+  }
+
+  Future<void> fetchEmployeeCategories() async {
+    if (isLoading.value) return;
+    isLoading.value = true;
+    try {
+      final fetched = await _customerServices.fetchCategoriesByType('Employee');
+      if (fetched != null) {
+        employeeCategories.assignAll(fetched);
+      }
+    } catch (e) {
+      CustomAlert.error("Failed to fetch staff categories: $e");
     } finally {
       isLoading.value = false;
     }
@@ -119,7 +174,7 @@ class CustomerController extends GetxController {
         customers.assignAll(fetchedCustomers); // Replace existing list
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
@@ -139,12 +194,11 @@ class CustomerController extends GetxController {
       }
     } catch (e) {
       isCustomerFound.value = false;
-      Get.snackbar('Error', 'Failed to fetch customer: $e');
+      CustomAlert.error('Failed to fetch customer: $e');
     } finally {
       isLoading.value = false;
     }
   }
-
 
   Future<void> fetchalloutstanding() async {
     if (isLoading.value) return;
@@ -164,56 +218,29 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> AddEmployee(AddEmployeeModel employee) async {
+  Future<bool> AddCustomerContact(AddCustomerContactModel contact) async {
     isLoading.value = true;
     try {
-      final response = await _customerServices.AddEmployee(employee);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Customer added successfully');
-        await fetchEmployees(employee.customer!); // Optionally refresh the list
-      } else {
-        Get.snackbar(
-          'Error',
-          'Failed to add customer: ${response.statusMessage}',
-        );
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while adding customer: $e');
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<bool> updateEmployee(
-    String employeeId,
-    AddEmployeeModel updated,
-  ) async {
-    isLoading.value = true;
-    try {
-      // Assume your service has an `updateEmployee` PUT/PATCH endpoint:
-      final response = await _customerServices.updateEmployee(
-        employeeId,
-        updated,
+      final response = await _customerServices.AddCustomerContact(contact);
+      print(
+        'AddCustomerContact success: ${response.statusCode} - ${response.data}',
       );
-
-      if (response.statusCode == 200) {
-        // Optionally refresh the employee list after a successful update
-        await fetchEmployees(updated.customer!);
-        Get.snackbar('Success', 'Employee updated successfully');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        CustomAlert.success('Contact added successfully');
+        await fetchCustomerContacts(contact.customer!);
+        await Future.delayed(const Duration(seconds: 2));
+        Get.back();
         return true;
       } else {
-        Get.snackbar(
-          'Error',
-          'Failed to update employee: ${response.statusMessage}',
-          snackPosition: SnackPosition.BOTTOM,
+        CustomAlert.error(
+          'Failed to add contact: ${response.statusMessage}',
         );
         return false;
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Something went wrong while updating employee: $e',
-        snackPosition: SnackPosition.BOTTOM,
+      print('AddCustomerContact error: $e');
+      CustomAlert.error(
+        'Something went wrong while adding contact: $e',
       );
       return false;
     } finally {
@@ -221,19 +248,74 @@ class CustomerController extends GetxController {
     }
   }
 
+  // Legacy wrapper to avoid breaking older UI calls
+  Future<bool> AddEmployee(dynamic data) async {
+    if (data is AddCustomerContactModel) {
+      return await AddCustomerContact(data);
+    }
+    return false;
+  }
+
+  Future<bool> updateCustomerContact(
+    String contactId,
+    AddCustomerContactModel updated,
+  ) async {
+    isLoading.value = true;
+    try {
+      print("⏳ Updating contact $contactId...");
+      print("Payload: ${updated.toJson()}");
+
+      final response = await _customerServices.updateCustomerContact(
+        contactId,
+        updated,
+      );
+
+      print("✅ Server response for update: ${response.statusCode}");
+      print("Response data: ${response.data}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        CustomAlert.success('Contact updated successfully');
+        await fetchCustomerContacts(updated.customer!);
+        await Future.delayed(const Duration(seconds: 2));
+        Get.back();
+        return true;
+      } else {
+        CustomAlert.error(
+          'Failed to update contact: ${response.statusMessage}',
+        );
+        return false;
+      }
+    } catch (e) {
+      print("🚨 Exception during update: $e");
+      CustomAlert.error(
+        'Something went wrong while updating contact: $e',
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Legacy wrapper
+  Future<bool> updateEmployee(String id, dynamic updated) async {
+    if (updated is AddCustomerContactModel) {
+      return await updateCustomerContact(id, updated);
+    }
+    return false;
+  }
+
   // Inside CustomerController
 
-  Future<void> deleteEmployee(String id, String customerId) async {
+  Future<void> deleteCustomerContact(String id, String customerId) async {
     try {
       isLoading.value = true;
-      final response = await _customerServices.deleteEmployee(id);
+      final response = await _customerServices.deleteCustomerContact(id);
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Employee deleted');
-        await fetchEmployees(customerId);
+        await fetchCustomerContacts(customerId);
+        CustomAlert.success('Contact deleted');
       } else {
-        Get.snackbar(
-          'Error',
-          'Failed to delete employee: ${response.statusMessage}',
+        CustomAlert.error(
+          'Failed to delete contact: ${response.statusMessage}',
         );
       }
     } finally {
@@ -241,21 +323,31 @@ class CustomerController extends GetxController {
     }
   }
 
-  Future<void> fetchEmployees(String id) async {
+  // Legacy wrapper
+  Future<void> deleteEmployee(String id, String customerId) async {
+    await deleteCustomerContact(id, customerId);
+  }
+
+  Future<void> fetchCustomerContacts(String id) async {
     if (isLoading.value) return;
 
     isLoading.value = true;
     try {
-      List<GetEmployeeModel>? fetchedCustomers = await _customerServices
-          .fetchEmployees(id);
-      if (fetchedCustomers != null) {
-        employees.assignAll(fetchedCustomers); // Replace existing list
+      List<GetCustomerContactModel>? fetchedContacts = await _customerServices
+          .fetchCustomerContacts(id);
+      if (fetchedContacts != null) {
+        hospitalContacts.assignAll(fetchedContacts);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Legacy wrapper
+  Future<void> fetchEmployees(String id) async {
+    await fetchCustomerContacts(id);
   }
 
   /// Add a new customer
@@ -274,22 +366,24 @@ class CustomerController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print("🎉 Customer added successfully: ${response.data}");
-        Get.snackbar('Success', 'Customer added successfully');
         await fetchCustomers();
-        Get.offAll(() => CustomBottomNavBar());
+        isLoading.value = false;
+
+        CustomAlert.success('Customer added successfully');
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
         print("❌ Failed to add customer:");
         print("Status Code: ${response.statusCode}");
         print("Response: ${response.data}");
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to add customer: ${response.statusMessage ?? "Unknown error"}',
         );
       }
     } catch (e, stackTrace) {
       print('🚨 Exception occurred: $e');
       print('📍 Stack trace: $stackTrace');
-      Get.snackbar('Error', 'Something went wrong while adding customer');
+      CustomAlert.error('Something went wrong while adding customer');
     } finally {
       isLoading.value = false;
     }
@@ -300,24 +394,22 @@ class CustomerController extends GetxController {
       final response = await _customerServices.deleteCustomer(customerId);
       if (response.statusCode == 200 || response.statusCode == 204) {
         customers.removeWhere((c) => c.id == customerId);
+
+        CustomAlert.success('Customer deleted successfully');
+        await Future.delayed(const Duration(seconds: 2));
         Get.back(); // ⬅️ Auto-navigate back
-        Get.snackbar('Deleted', 'Customer deleted successfully',
-            backgroundColor: Colors.green, colorText: Colors.white);
         update(); // optional if you're using GetBuilder
       } else {
-        Get.snackbar('Error', 'Failed to delete customer',
-            backgroundColor: Colors.red, colorText: Colors.white);
-        Get.snackbar(
-          'Error',
-          'Failed to Delete customer: ${response.statusMessage}',
+        CustomAlert.error(
+          'Failed to delete customer: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete customer: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      CustomAlert.error(
+        'Failed to delete customer: $e',
+      );
     }
   }
-
 
   /// ✅ EDIT customer
   Future<void> editCustomer(String id, AddCustomerModel customer) async {
@@ -329,16 +421,18 @@ class CustomerController extends GetxController {
       print('Response status: ${response.statusCode}');
       if (response.statusCode == 200 || response.statusCode == 201) {
         await fetchCustomers(); // Refresh customers list
-        Get.offAll(() => CustomBottomNavBar()); // Navigate to CustomersList
-        Get.snackbar('Success', 'Customer updated successfully');
+        isLoading.value = false;
+
+        CustomAlert.success('Customer updated successfully');
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to update customer: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while updating customer: $e');
+      CustomAlert.error('Something went wrong while updating customer: $e');
     } finally {
       isLoading.value = false;
     }
@@ -376,42 +470,103 @@ class CustomerController extends GetxController {
         description,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Customer added successfully');
+        CustomAlert.success('Payment added successfully');
 
         await fetchalloutstanding(); // ✅ Refresh the list after adding
 
         // ✅ After fetch, navigate safely to CustomAppBar
-        Future.delayed(Duration.zero, () {
-          Get.offAll(
-            () => CustomBottomNavBar(),
-          ); // << Your CustomAppBar screen here
-        });
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(
+          () => CustomBottomNavBar(),
+        ); // << Your CustomAppBar screen here
       } else {
-        Get.snackbar(
-          'Error',
-          'Failed to add customer: ${response.statusMessage}',
+        CustomAlert.error(
+          'Failed to add payment: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while adding customer: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Future<void> fetchalloutstanding() async {
-  //   if (isLoading.value) return;
-  //
-  //   isLoading.value = true;
-  //   try {
-  //     final fetcheddallOutstanding = await _customerServices.fetchAllOutstanding();
-  //     if (fetcheddallOutstanding != null) {
-  //       alloutstanding.assignAll(fetcheddallOutstanding);
-  //     } else {
-  //     }
-  //   } catch (e) {
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // }
+  Future<void> importExcel() async {
+    try {
+      FilePickerResult? result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx', 'xls'],
+        withData: true, // Necessary for Web to get bytes
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        isLoading.value = true;
+
+        final bytes = result.files.single.bytes!;
+        final fileName = result.files.single.name;
+
+        final response = await _customerServices.importCustomers(
+          bytes,
+          fileName,
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final errors = response.data['errors'];
+          if (errors != null && errors is List && errors.isNotEmpty) {
+            Get.defaultDialog(
+              title: "Import Finished with Warnings",
+              content: Text(
+                "Imported ${response.data['count']} records. ${errors.length} rows had errors.",
+              ),
+              confirm: TextButton(
+                onPressed: () => Get.back(),
+                child: Text("OK"),
+              ),
+            );
+          } else {
+            CustomAlert.success(
+              response.data['message'] ?? 'Import successful',
+            );
+          }
+          await fetchCustomers();
+        } else {
+          CustomAlert.error('Import failed: ${response.statusMessage}');
+        }
+      } else {
+        CustomAlert.error('No file data received. Please try again.');
+      }
+    } catch (e) {
+      print('Import Error: $e');
+      CustomAlert.error('An error occurred during import: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> exportToExcel() async {
+    try {
+      isLoading.value = true;
+      final response = await _customerServices.exportCustomers();
+
+      if (response.statusCode == 200) {
+        // Handle download for Web
+        final fName =
+            "customers_export_${DateTime.now().millisecondsSinceEpoch}.xlsx";
+        final mime =
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        await downloadFile(List<int>.from(response.data), fName, mime);
+
+        CustomAlert.success('Excel file exported successfully');
+      } else {
+        CustomAlert.error('Export failed: ${response.statusMessage}');
+      }
+    } catch (e) {
+      print('Export Error: $e');
+      CustomAlert.error(
+        'An error occurred during export: $e. Make sure you are on a compatible browser.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

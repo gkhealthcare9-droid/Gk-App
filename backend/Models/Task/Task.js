@@ -44,9 +44,24 @@ const Task = sequelize.define('Task', {
     type: DataTypes.ENUM('Low', 'Medium', 'High'),
     defaultValue: 'Medium',
   },
+  customerId: {
+    type: DataTypes.BIGINT,
+    allowNull: true,
+    references: {
+      model: 'customers',
+      key: 'id'
+    }
+  },
 }, {
   timestamps: true,
   tableName: 'tasks',
 });
+
+// Associations
+const User = require('../User/User');
+const Customer = require('../Customer/Customer');
+
+Task.belongsTo(User, { as: 'assignedTo', foreignKey: 'assignedToId' });
+Task.belongsTo(Customer, { foreignKey: 'customerId' });
 
 module.exports = Task;

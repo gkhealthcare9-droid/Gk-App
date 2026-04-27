@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import '../../Utils/Colors.dart';
 import '../AuthScreens/LoginScreen.dart';
 import '../Widgets/CustomButton.dart';
 import '../Widgets/CustomTextField.dart';
+import '../Widgets/CustomAlert.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,18 +21,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  StreamSubscription? _profileSubscription;
 
   @override
   void initState() {
     super.initState();
-    final controller = Get.put(ProfileController());
+    final controller = Get.find<ProfileController>();
+    // Fetch profile
     controller.fetchProfile();
-    controller.userProfile.listen((user) {
-      if (user.name != null && user.name!.isNotEmpty) {
-        _nameController.text = user.name ?? '';
-        _emailController.text = user.email ?? '';
-        _phoneController.text = user.phone ?? '';
-      }
+    
+    // Initial population
+    final user = controller.userProfile.value;
+    _nameController.text = user.name ?? '';
+    _emailController.text = user.email ?? '';
+    _phoneController.text = user.phone ?? '';
+
+    // Listen to changes and update controllers only if screen is active
+    _profileSubscription = controller.userProfile.listen((user) {
+      if (!mounted) return;
+      if (user.name != null) _nameController.text = user.name!;
+      if (user.email != null) _emailController.text = user.email!;
+      if (user.phone != null) _phoneController.text = user.phone!;
     });
   }
 
@@ -40,12 +51,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await prefs.clear();
       Get.offAll(() => const LoginScreen());
     } catch (e) {
-      Get.snackbar('Error', 'Failed to log out: $e');
+      CustomAlert.error('Failed to log out: $e');
     }
   }
 
   @override
   void dispose() {
+    _profileSubscription?.cancel();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -138,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: CustomButton(
                     onTap: () async {
                       if (_nameController.text.trim().isEmpty) {
-                        Get.snackbar('Error', 'Name cannot be empty');
+                        CustomAlert.error('Name cannot be empty');
                         return;
                       }
                       await profileController.updateProfile(

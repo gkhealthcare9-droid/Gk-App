@@ -21,10 +21,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const generateUniqueNumber = () => {
-  const prefix = 'GK';
-  const timestamp = Date.now().toString().slice(-6);
-  const random = Math.floor(100 + Math.random() * 900);
-  return `${prefix}${timestamp}${random}`;
+  const prefix = 'GK-';
+  const random = Math.floor(1000 + Math.random() * 9000); // Ensures 4 digits
+  return `${prefix}${random}`;
 };
 
 const generateUniqueCustomerNumber = async (maxRetries = 10) => {
@@ -116,5 +115,6 @@ router.get('/by-unique/:uniqueNumber', userAuth, async (req, res) => {
     res.status(500).json({ message: 'Server Error', error: err.message });
   }
 });
+
 
 module.exports = router;

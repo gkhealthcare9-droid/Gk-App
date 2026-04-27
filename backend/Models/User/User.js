@@ -45,9 +45,20 @@ const User = sequelize.define('User', {
     type: DataTypes.ENUM('admin', 'user'),
     defaultValue: 'user',
   },
+  positionId: {
+    type: DataTypes.BIGINT,
+    allowNull: true,
+    references: {
+      model: 'categories',
+      key: 'id'
+    }
+  },
 }, {
   timestamps: true,
   tableName: 'users',
 });
 
 module.exports = User;
+
+const Category = require('../Classification/Category');
+User.belongsTo(Category, { foreignKey: 'positionId', as: 'position' });

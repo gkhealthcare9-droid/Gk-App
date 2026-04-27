@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sales_grow/Controllers/Product/Product.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:sales_grow/Views/Widgets/CustomDropDown.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
@@ -38,7 +39,7 @@ class _ProductFormState extends State<ProductForm> {
   }
 
   Future<void> pickImages() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: true,
     );
@@ -170,24 +171,24 @@ class _ProductFormState extends State<ProductForm> {
                 final tax = int.tryParse(_tax.text);
 
                 if (selectedCategory == null) {
-                Get.snackbar('Error', 'Please select a category');
-                return;
+                  CustomAlert.error('Please select a category');
+                  return;
                 }
                 if (_productNameCtrl.text.trim().isEmpty) {
-                Get.snackbar('Error', 'Please enter Part name');
-                return;
+                  CustomAlert.error('Please enter Part name');
+                  return;
                 }
                 if (_hsnCtrl.text.trim().isEmpty) {
-                Get.snackbar('Error', 'Please enter HSN code');
-                return;
+                  CustomAlert.error('Please enter HSN code');
+                  return;
                 }
                 if (rate == null) {
-                Get.snackbar('Error', 'Please enter valid Price');
-                return;
+                  CustomAlert.error('Please enter valid Price');
+                  return;
                 }
                 if (tax == null) {
-                Get.snackbar('Error', 'Please enter valid tax percentage');
-                return;
+                  CustomAlert.error('Please enter valid tax percentage');
+                  return;
                 }
                 // if (selectedImages.isEmpty) {
                 // Get.snackbar('Error', 'Please select at least one product image');

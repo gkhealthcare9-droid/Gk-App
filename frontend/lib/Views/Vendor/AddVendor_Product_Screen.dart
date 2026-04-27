@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 
 class AddVendorProductScreen extends StatefulWidget {
   final String id;
@@ -119,104 +120,54 @@ class _AddVendorProductScreenState extends State<AddVendorProductScreen> {
   void _saveAndReturn() {
     // Validate category
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a product category.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      CustomAlert.error('Please select a product category.');
       return;
     }
 
     // If Dialysis Machine, validate its subfields:
     if (_selectedCategory == 'Dialysis Machine') {
       if (_selectedMake == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a Make.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomAlert.error('Please select a Make.');
         return;
       }
       if (_selectedModel == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a Model.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomAlert.error('Please select a Model.');
         return;
       }
       final qty = int.tryParse(_qtyController.text.trim());
       if (qty == null || qty < 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a valid quantity.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomAlert.error('Please enter a valid quantity.');
         return;
       }
       if (_selectedSerialNo == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a Serial No.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomAlert.error('Please select a Serial No.');
         return;
       }
       if (_amcStartDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please pick an AMC Start Date.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomAlert.error('Please pick an AMC Start Date.');
         return;
       }
       if (_amcEndDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please pick an AMC End Date.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomAlert.error('Please pick an AMC End Date.');
         return;
       }
     }
 
     // Validate Telle response
     if (_selectedTelle == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a Telle calling response.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      CustomAlert.error('Please select a Telle calling response.');
       return;
     }
 
     // Validate communication
     if (_selectedCommunication == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a communication method.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      CustomAlert.error('Please select a communication method.');
       return;
     }
 
     // Validate follow-up date
     if (_followUpDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please pick a follow-up date.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      CustomAlert.error('Please pick a follow-up date.');
       return;
     }
 

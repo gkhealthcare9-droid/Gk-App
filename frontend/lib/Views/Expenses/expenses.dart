@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import '../../Views/Widgets/CustomAppBar.dart';
+import '../../Utils/Colors.dart';
 import 'package:sales_grow/Controllers/Expenses/Expenses.dart';
+
+import '../Widgets/CustomAlert.dart';
 
 class ExpenseScreen extends StatefulWidget {
   const ExpenseScreen({super.key});
@@ -37,11 +41,11 @@ String? _selectedCategoryId;
     final description = descCtrl.text.trim();
     final categoryId = _selectedCategoryId;
     if (amount == null) {
-      Get.snackbar('Validation Error', 'Please enter a valid amount.');
+      CustomAlert.error('Please enter a valid amount.');
       return;
     }
     if (description.isEmpty) {
-      Get.snackbar('Validation Error', 'Please enter a description.');
+      CustomAlert.error('Please enter a description.');
       return;
     }
 
@@ -105,11 +109,11 @@ String? _selectedCategoryId;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Expense Manager"),
+      appBar: CustomAppBar(
+        title: "Expense Manager",
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_today),
+            icon: const Icon(Icons.calendar_today, color: AppColors.primaryBlue),
             onPressed: _pickDateRange,
           ),
         ],
@@ -120,11 +124,11 @@ String? _selectedCategoryId;
           if (_expensesController.isLoading.value) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (_expensesController.wallet.value.user!.isEmpty) {
+          if (_expensesController.wallet.value.user == null || _expensesController.wallet.value.user!.isEmpty) {
             return const Center(child: Text('No Funds Added Yet'));
           }
 
-          final expenses = _expensesController.transcations.value ?? [];
+          final expenses = _expensesController.transcations;
           final filteredExpenses = expenses.where((e) {
             if (_startDate == null || _endDate == null) return true;
             final date = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
@@ -388,7 +392,13 @@ class ExpenseDetailScreen extends StatelessWidget {
     final String formattedDateTime = DateFormat('dd MMM yyyy, hh:mm a').format(istTime);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Expense Details")),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primaryBlue, size: 20),
+          onPressed: () => Get.back(),
+        ),
+        title: const Text("Expense Details"),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

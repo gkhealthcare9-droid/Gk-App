@@ -136,5 +136,4 @@ class AddCustomerModel {
 
     return map;
   }
-
 }

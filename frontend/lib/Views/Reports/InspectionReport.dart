@@ -15,9 +15,11 @@ import 'package:sales_grow/Models/report/Manufacturer.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
 import 'package:signature/signature.dart';
+import '../../Utils/Colors.dart';
 import '../ReportDesign/InspectionReportView.dart';
-import '../../Models/Employee/AddEmployee_model.dart';
+import '../../Models/CustomerContact/CustomerContactModel.dart';
 import '../../Models/product/product_category_model.dart';
+import '../Widgets/CustomAlert.dart';
 import '../Widgets/CustomButton.dart';
 import '../Widgets/CustomDropDown.dart';
 import '../Widgets/CustomSigntaure.dart';
@@ -279,9 +281,9 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
     if (_hospitalName.text.isEmpty ||
         _slNumberController.text.isEmpty ||
         _signedByController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Please fill in hospital details, serial number, and signature',
+      CustomAlert.showError(
+        context: context,
+        message: 'Please fill in hospital details, serial number, and signature',
       );
       return;
     }
@@ -326,7 +328,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
             selectedEmployees.map((empId) {
               final employee = _customerController.employees.firstWhere(
                 (e) => e.id == empId,
-                orElse: () => GetEmployeeModel(),
+                orElse: () => GetCustomerContactModel(),
               );
               return employee.name ?? '';
             }).toList(),
@@ -347,18 +349,17 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
 
         final result = await OpenFile.open(tempFile.path);
         if (result.type != ResultType.done) {
-          Get.snackbar('Error', 'Could not open PDF: ${result.message}');
+          CustomAlert.showError(context: context, message: 'Could not open PDF: ${result.message}');
         } else {
-          Get.snackbar(
-            'Success',
-            'PDF generated and opened successfully',
-            backgroundColor: Colors.white,
-            icon: Icon(Icons.verified, color: Colors.green),
+          CustomAlert.showSuccess(
+            context: context,
+            message: 'PDF generated and opened successfully',
           );
+          await Future.delayed(const Duration(seconds: 2));
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to generate PDF: $e');
+      CustomAlert.showError(context: context, message: 'Failed to generate PDF: $e');
     }
   }
 
@@ -738,7 +739,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
           title: 'Inspection Report',
           actions: [
             IconButton(
-              icon: const Icon(Icons.clear_all),
+              icon: const Icon(Icons.clear_all, color: AppColors.primaryBlue),
               tooltip: 'Clear Form',
               onPressed: () {
                 setState(() {

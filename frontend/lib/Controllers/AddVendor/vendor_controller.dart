@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:sales_grow/Models/Employee/add_vendor_employee_model.dart';
 import 'package:sales_grow/Models/Vendor/Vendor.dart';
 import 'package:sales_grow/Services/Vendor/vendor_services.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:sales_grow/Views/Widgets/CustomBottomNav.dart';
 import '../../Models/Category/getcategory_model.dart';
 
@@ -27,7 +28,7 @@ class VendorController extends GetxController {
         vendors.assignAll(fetchedVendors);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
@@ -43,7 +44,7 @@ class VendorController extends GetxController {
         employees.assignAll(fetchedCustomers);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
@@ -57,10 +58,10 @@ class VendorController extends GetxController {
       if (fetched != null) {
         categoryList.assignAll(fetched);
       } else {
-        Get.snackbar("Error", "No category data found");
+        CustomAlert.error("No category data found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch categories: $e");
+      CustomAlert.error("Failed to fetch categories: $e");
     } finally {
       isLoading.value = false;
     }
@@ -71,16 +72,17 @@ class VendorController extends GetxController {
     try {
       final response = await _VendorServices.AddEmployee(employee);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Customer added successfully');
+        CustomAlert.success('Employee added successfully');
         await fetchEmployees(employee.vendor!);
+        await Future.delayed(const Duration(seconds: 2));
+        Get.back();
       } else {
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to add customer: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while adding customer: $e');
+      CustomAlert.error('Something went wrong while adding customer: $e');
     } finally {
       isLoading.value = false;
     }
@@ -91,19 +93,17 @@ class VendorController extends GetxController {
     try {
       final response = await _VendorServices.addvendor(vendor);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Vendor added successfully');
+        CustomAlert.success('Vendor added successfully');
         await fetchVendors();
-        Future.delayed(Duration.zero, () {
-          Get.offAll(() => CustomBottomNavBar());
-        });
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => CustomBottomNavBar());
       } else {
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to add vendor: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while adding vendor: $e');
+      CustomAlert.error('Something went wrong while adding vendor: $e');
     } finally {
       isLoading.value = false;
     }
@@ -114,17 +114,16 @@ class VendorController extends GetxController {
     try {
       final response = await _VendorServices.deletevendor(id);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Customer Deleted successfully');
+        CustomAlert.success('Vendor Deleted successfully');
         clearData();
         await fetchVendors();
       } else {
-        Get.snackbar(
-          'Error',
-          'Failed to Delete customer: ${response.statusMessage}',
+        CustomAlert.error(
+          'Failed to Delete vendor: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while adding customer: $e');
+      CustomAlert.error('Something went wrong while deleting vendor: $e');
     } finally {
       isLoading.value = false;
     }
@@ -135,18 +134,18 @@ class VendorController extends GetxController {
       isLoading.value = true;
       final response = await _VendorServices.editvendor(id, vendor);
       if (response.statusCode == 200 || response.statusCode == 201) {
+        CustomAlert.success('Vendor updated successfully');
         clearData();
         await fetchVendors();
+        await Future.delayed(const Duration(seconds: 2));
         Get.offAll(() => CustomBottomNavBar());
-        Get.snackbar('Success', 'Vendor updated successfully');
       } else {
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to update vendor: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Update failed: $e');
+      CustomAlert.error('Update failed: $e');
     } finally {
       isLoading.value = false;
     }
@@ -157,19 +156,17 @@ class VendorController extends GetxController {
     try {
       final response = await _VendorServices.editVendorEmployee(id, employee);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Employee updated successfully');
+        CustomAlert.success('Employee updated successfully');
         await fetchEmployees(employee.vendor!);
-        Future.delayed(Duration.zero, () {
-          Get.offAll(() => CustomBottomNavBar());
-        });
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => CustomBottomNavBar());
       } else {
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to update employee: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Employee update failed: $e');
+      CustomAlert.error('Employee update failed: $e');
     } finally {
       isLoading.value = false;
     }
@@ -180,16 +177,15 @@ class VendorController extends GetxController {
     try {
       final response = await _VendorServices.deleteVendorEmployee(id);
       if (response.statusCode == 200 || response.statusCode == 204) {
-        Get.snackbar('Success', 'Employee deleted successfully');
+        CustomAlert.success('Employee deleted successfully');
         await fetchEmployees(vendorId);
       } else {
-        Get.snackbar(
-          'Error',
+        CustomAlert.error(
           'Failed to delete employee: ${response.statusMessage}',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while deleting employee: $e');
+      CustomAlert.error('Something went wrong while deleting employee: $e');
     } finally {
       isLoading.value = false;
     }
@@ -206,7 +202,7 @@ class VendorController extends GetxController {
       }
       return vendor;
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch vendor: $e");
+      CustomAlert.error("Failed to fetch vendor: $e");
       print('Error details: $e');
       return null;
     } finally {

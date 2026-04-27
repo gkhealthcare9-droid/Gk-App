@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:sales_grow/Models/report/GenerateReports/Installation_Report_Model.dart';
 import 'package:sales_grow/Models/report/Manufacturer.dart';
 import 'package:sales_grow/Services/report/GenerateReportServices/Installation_Report_Services.dart';
-
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import '../../Services/report/report_services.dart';
 
 class ReportController extends GetxController {
@@ -23,10 +23,10 @@ class ReportController extends GetxController {
       if (fetched != null) {
         maufacturer.assignAll(fetched); // ✅ This now works
       } else {
-        Get.snackbar("Error", "No category data found");
+        CustomAlert.error("No manufacturer data found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch categories: $e");
+      CustomAlert.error("Failed to fetch manufacturers: $e");
     } finally {
       isLoading.value = false;
     }
@@ -41,10 +41,10 @@ class ReportController extends GetxController {
         installationReports.assignAll(fetched); // ✅ This now works
         print(installationReports.toList());
       } else {
-        Get.snackbar("Error", "No category data found");
+        CustomAlert.error("No manufacturer data found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch categories: $e");
+      CustomAlert.error("Failed to fetch manufacturers: $e");
     } finally {
       isLoading.value = false;
     }
@@ -56,13 +56,15 @@ class ReportController extends GetxController {
     try {
       final response = await _installationReportService.addInstallation(report);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Customer added successfully');
+        CustomAlert.success('Installation report added successfully');
+        await Future.delayed(const Duration(seconds: 2));
+        Get.back();
       } else {
-        Get.snackbar(
-            'Error', 'Failed to add customer: ${response.statusMessage}');
+        CustomAlert.error(
+            'Failed to add report: ${response.statusMessage}');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong while adding customer: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }

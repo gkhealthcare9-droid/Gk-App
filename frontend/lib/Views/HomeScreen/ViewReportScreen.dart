@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import '../GetReportsScreens/InstallationReports.dart';
 import '../Reports/DeliveryChallan.dart';
@@ -49,7 +50,7 @@ class _ViewReportScreenState extends State<ViewReportScreen> {
         Get.to(() => DeliveryChallanScreen());
         break;
       default:
-        Get.snackbar('Error', 'Screen not found for $option');
+        CustomAlert.error('Screen not found for $option');
     }
   }
 

@@ -1,24 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:sales_grow/Models/report/Manufacturer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../ApiService.dart';
 import '../../Utils/Appconstants.dart';
 
 class ReportServices{
-
-  final Dio _dio = Dio();
+  final Dio _dio = ApiService().dio;
 
   Future<List<GetManufacturerModel>?> fetchManufacturer() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
       final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.GETMANUFACTURER}',
+        AppConstants.GETMANUFACTURER,
       );
 
       if (response.statusCode == 200) {
@@ -31,7 +22,7 @@ class ReportServices{
           return null;
         }
       } else {
-        print('Failed to fetch customers: ${response.statusCode}');
+        print('Failed to fetch manufacturers: ${response.statusCode}');
         return null;
       }
     } on DioException catch (e) {
@@ -42,5 +33,4 @@ class ReportServices{
       return null;
     }
   }
-
 }

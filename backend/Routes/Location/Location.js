@@ -14,10 +14,43 @@ router.post('/states/add', auth, async (req, res) => {
   }
 });
 
-router.get('/states', auth, async (req, res) => {
+router.get('/states', async (req, res) => {
   try {
     const states = await State.findAll({ order: [['name', 'ASC']] });
     res.json(states);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update State
+router.put('/states/:id', auth, async (req, res) => {
+  try {
+    const { name } = req.body;
+    const state = await State.findByPk(req.params.id);
+    if (!state) return res.status(404).json({ error: 'State not found' });
+
+    await state.update({ name });
+    res.json(state);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete State
+router.delete('/states/:id', auth, async (req, res) => {
+  try {
+    const state = await State.findByPk(req.params.id);
+    if (!state) return res.status(404).json({ error: 'State not found' });
+
+    // Check if state has cities
+    const citiesCount = await City.count({ where: { stateId: req.params.id } });
+    if (citiesCount > 0) {
+      return res.status(400).json({ error: 'Cannot delete state with existing cities' });
+    }
+
+    await state.destroy();
+    res.json({ message: 'State deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -42,10 +75,37 @@ router.get('/cities', auth, async (req, res) => {
   }
 });
 
-router.get('/cities/by-state/:stateId', auth, async (req, res) => {
+router.get('/cities/by-state/:stateId', async (req, res) => {
   try {
     const cities = await City.findAll({ where: { stateId: req.params.stateId }, order: [['name', 'ASC']] });
     res.json(cities);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update City
+router.put('/cities/:id', auth, async (req, res) => {
+  try {
+    const { name, stateId } = req.body;
+    const city = await City.findByPk(req.params.id);
+    if (!city) return res.status(404).json({ error: 'City not found' });
+    
+    await city.update({ name, stateId });
+    res.json(city);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete City
+router.delete('/cities/:id', auth, async (req, res) => {
+  try {
+    const city = await City.findByPk(req.params.id);
+    if (!city) return res.status(404).json({ error: 'City not found' });
+    
+    await city.destroy();
+    res.json({ message: 'City deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

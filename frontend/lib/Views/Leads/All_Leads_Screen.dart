@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../Utils/Colors.dart';
+import '../Widgets/CustomAppBar.dart';
+import '../Widgets/CustomAlert.dart';
 import 'package:get/get.dart';
 import 'package:sales_grow/Views/Leads/FollowUp_leads_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -68,7 +71,7 @@ class _LeadsScreenState extends State<LeadsScreen>
   // Open WhatsApp with phone number
   Future<void> _openWhatsApp(String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
-      Get.snackbar('Error', 'No phone number provided');
+      CustomAlert.error('No phone number provided');
       return;
     }
     String digitsOnly = phoneNumber.replaceAll(RegExp(r'\D'), '');
@@ -77,7 +80,7 @@ class _LeadsScreenState extends State<LeadsScreen>
     } else if (digitsOnly.length == 12 && digitsOnly.startsWith('91')) {
       // Already has +91
     } else if (digitsOnly.length < 10) {
-      Get.snackbar('Error', 'Invalid phone number format.');
+      CustomAlert.error('Invalid phone number format.');
       return;
     }
     final whatsappUrl = Uri.parse(
@@ -95,7 +98,7 @@ class _LeadsScreenState extends State<LeadsScreen>
       try {
         await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
       } catch (e) {
-        Get.snackbar('Error', 'Could not open WhatsApp or browser.');
+        CustomAlert.error('Could not open WhatsApp or browser.');
       }
     }
   }
@@ -234,38 +237,11 @@ class _LeadsScreenState extends State<LeadsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      appBar: AppBar(
-        backgroundColor: Colors.lightBlue.shade100,
-        elevation: 4,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.lightBlue, size: 15),
-              onPressed: () => Navigator.of(context).pop(),
-              tooltip: 'Back',
-            ),
-          ),
-        ),
-        title: const Text(
-          'Leads',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1E293B),
-            fontSize: 24,
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'Leads',
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF475569)),
+            icon: const Icon(Icons.refresh, color: AppColors.primaryBlue),
             onPressed: leadController.fetchLeads,
             tooltip: 'Refresh Leads',
           ),
@@ -273,7 +249,7 @@ class _LeadsScreenState extends State<LeadsScreen>
             alignment: Alignment.topRight,
             children: [
               IconButton(
-                icon: const Icon(Icons.filter_list, color: Color(0xFF475569)),
+                icon: const Icon(Icons.filter_list, color: AppColors.primaryBlue),
                 onPressed: _showFilterDialog,
                 tooltip: 'Filter Leads',
               ),
@@ -546,22 +522,10 @@ class _LeadsScreenState extends State<LeadsScreen>
                                 if (await canLaunchUrl(uri)) {
                                   await launchUrl(uri);
                                 } else {
-                                  Get.snackbar(
-                                    'Error',
-                                    'Cannot launch phone call',
-                                    backgroundColor: Colors.redAccent,
-                                    colorText: Colors.white,
-                                    snackPosition: SnackPosition.TOP,
-                                  );
+                                  CustomAlert.error('Cannot launch phone call');
                                 }
                               } else {
-                                Get.snackbar(
-                                  'Error',
-                                  'Phone number is not available',
-                                  backgroundColor: Colors.redAccent,
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.TOP,
-                                );
+                                CustomAlert.error('Phone number is not available');
                               }
                             },
                             tooltip: 'Call Lead',
@@ -636,13 +600,7 @@ class _LeadsScreenState extends State<LeadsScreen>
                               () => FollowUpDetailScreen(leadId: lead.id!),
                             );
                           } else {
-                            Get.snackbar(
-                              'Error',
-                              'Lead ID is missing',
-                              backgroundColor: Colors.redAccent,
-                              colorText: Colors.white,
-                              snackPosition: SnackPosition.TOP,
-                            );
+                            CustomAlert.error('Lead ID is missing');
                           }
                         },
                         style: TextButton.styleFrom(

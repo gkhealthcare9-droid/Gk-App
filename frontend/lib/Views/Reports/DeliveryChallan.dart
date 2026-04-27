@@ -4,6 +4,8 @@ import 'package:sales_grow/Controllers/AddVendor/vendor_controller.dart';
 import 'package:sales_grow/Controllers/Product/Product.dart';
 import 'package:sales_grow/Models/product/getproduct_model.dart';
 import 'package:sales_grow/Models/Vendor/Vendor.dart';
+import '../Widgets/CustomAlert.dart';
+import '../Widgets/CustomAppBar.dart';
 
 class DeliveryChallanScreen extends StatefulWidget {
   const DeliveryChallanScreen({super.key});
@@ -1021,12 +1023,7 @@ class _DeliveryChallanScreenState extends State<DeliveryChallanScreen> {
           _vendorAccountsCtrl.text = '';
           _showVendorDetails.value = false;
         });
-        Get.snackbar(
-          'Error',
-          'No vendor found for ID: $vendorIdText',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('No vendor found for ID: $vendorIdText');
       }
     } catch (e) {
       setState(() {
@@ -1042,12 +1039,7 @@ class _DeliveryChallanScreenState extends State<DeliveryChallanScreen> {
         _vendorAccountsCtrl.text = '';
         _showVendorDetails.value = false;
       });
-      Get.snackbar(
-        'Error',
-        'Failed to fetch vendor: $e',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Failed to fetch vendor: $e');
     } finally {
       _isVendorLoading.value = false;
     }
@@ -1126,57 +1118,27 @@ class _DeliveryChallanScreenState extends State<DeliveryChallanScreen> {
     for (var i = 0; i < _products.length; i++) {
       final product = _products[i];
       if ((product['productId'] as TextEditingController).text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Product ID is required',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Product ID is required');
         return;
       }
       if ((product['name'] as TextEditingController).text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Name is required',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Name is required');
         return;
       }
       if ((product['hsn'] as TextEditingController).text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: HSN Code is required',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: HSN Code is required');
         return;
       }
       if ((product['rate'] as TextEditingController).text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Rate is required',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Rate is required');
         return;
       }
       if ((product['description'] as TextEditingController).text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Description is required',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Description is required');
         return;
       }
       if ((product['quantity'] as TextEditingController).text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Quantity is required',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Quantity is required');
         return;
       }
       final double? rate = double.tryParse(
@@ -1186,77 +1148,37 @@ class _DeliveryChallanScreenState extends State<DeliveryChallanScreen> {
         (product['quantity'] as TextEditingController).text,
       );
       if (rate == null) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Invalid rate',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Invalid rate');
         return;
       }
       if (quantity == null || quantity <= 0) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Quantity must be greater than 0',
-          backgroundColor: Colors.redAccent,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomAlert.error('Product ${i + 1}: Quantity must be greater than 0');
         return;
       }
     }
 
     if (_vendorNameCtrl.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Vendor Name is required',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Vendor Name is required');
       return;
     }
     if (_vendorAddressCtrl.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Vendor Address is required',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Vendor Address is required');
       return;
     }
     if (_vendorGSTCtrl.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Vendor GSTIN is required',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Vendor GSTIN is required');
       return;
     }
     if (_vendorStateCtrl.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Vendor State Name is required',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Vendor State Name is required');
       return;
     }
     if (_poNumberCtrl.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'PO Number is required',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('PO Number is required');
       return;
     }
     if (_createdByCtrl.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Created By is required',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Created By is required');
       return;
     }
 
@@ -1326,20 +1248,10 @@ class _DeliveryChallanScreenState extends State<DeliveryChallanScreen> {
         selectedTax: _selectedTax.value,
         createdBy: _createdByCtrl.text,
       );
-      Get.snackbar(
-        'Success',
-        'Delivery Challan generated successfully',
-        backgroundColor: Colors.green,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.success('Delivery Challan generated successfully');
       _clearForm();
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to generate Delivery Challan: $e',
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomAlert.error('Failed to generate Delivery Challan: $e');
     } finally {
       setState(() => _isGenerating = false);
     }
@@ -1772,11 +1684,8 @@ class _DeliveryChallanScreenState extends State<DeliveryChallanScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: const Text('Create Delivery Challan'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
+        appBar: CustomAppBar(
+          title: 'Create Delivery Challan',
           actions: [
             IconButton(
               icon: const Icon(Icons.clear_all),

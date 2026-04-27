@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
 import '../../Controllers/AuthController/ProfileController.dart';
+import '../Widgets/CustomAppBar.dart';
 import '../../Controllers/Leads/Leads_Controller.dart';
 import '../../Controllers/Product/Product.dart';
 import '../../Models/Leads/Leads_Model.dart';
@@ -141,12 +142,7 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
         leadValue: leadValueInt,
       );
 
-      _leadController.addLead(postLead).then((_) {
-        if (_leadController.errorMessage.value.isEmpty) {
-          Get.off(() => const LeadsScreen());
-          CustomAlert.success('Lead recorded successfully.');
-        }
-      });
+      _leadController.addLead(postLead);
     }
   }
 
@@ -214,13 +210,8 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        leading: CustomBackButton(onTap: () => Get.back()),
-        title: const Text('NEW BUSINESS LEAD', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+      appBar: const CustomAppBar(
+        title: 'Add Lead',
       ),
       body: Obx(() {
         if (_leadController.isLoading.value) {

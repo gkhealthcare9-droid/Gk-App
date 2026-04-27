@@ -1,111 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sales_grow/Views/Vendor/vendor_view.dart';
+import '../../Utils/Colors.dart';
 import '../../Controllers/AddVendor/vendor_controller.dart';
 import '../../Models/Vendor/Vendor.dart';
+import '../Widgets/CustomAppBar.dart';
+import 'vendor_view.dart';
+import 'AddVendor.dart';
 
 class VendorsListScreen extends StatefulWidget {
   const VendorsListScreen({super.key});
 
   @override
-  _VendorsListScreenState createState() => _VendorsListScreenState();
+  State<VendorsListScreen> createState() => _VendorsListScreenState();
 }
 
 class _VendorsListScreenState extends State<VendorsListScreen> {
-  final VendorController vendorController = Get.put(VendorController());
-  final TextEditingController _searchCtrl = TextEditingController();
-  final RxString _searchQuery = ''.obs;
-  final RxString _selectedState = ''.obs;
-  final RxString _selectedCity = ''.obs;
-  final RxBool _onlyDistributors = false.obs;
+  final VendorController vendorController = Get.find<VendorController>();
+  final _searchQuery = ''.obs;
+  final _searchCtrl = TextEditingController();
 
-
+  final _selectedState = ''.obs;
+  final _selectedCity = ''.obs;
 
   @override
   void initState() {
     super.initState();
     vendorController.fetchVendors();
   }
-  List<String> get _allCities {
-    final list = vendorController.vendors
-        .where((v) => _selectedState.value.isEmpty
-        ? true
-        : (v.state?.toLowerCase() == _selectedState.value.toLowerCase()))
-        .map((v) => v.city?.trim() ?? '')
-        .where((s) => s.isNotEmpty)
-        .toSet()
-        .toList();
-    list.sort();
-    return list;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
-  bool _matchesSearch(VendorModel v) {
-    final q = _searchQuery.value.toLowerCase();
-    return (v.vendorName ?? '').toLowerCase().contains(q) ||
-        (v.vendorCompany ?? '').toLowerCase().contains(q) ||
-        (v.vendorPhone ?? '').toLowerCase().contains(q) ||
-        (v.vendorEmail ?? '').toLowerCase().contains(q) ||
-        (v.vendorGSTIN ?? '').toLowerCase().contains(q) ||
-        (v.addressOne ?? '').toLowerCase().contains(q) ||
-        (v.addressTwo ?? '').toLowerCase().contains(q) ||
-        (v.city ?? '').toLowerCase().contains(q) ||
-        (v.state ?? '').toLowerCase().contains(q) ||
-        (v.pincode ?? '').toLowerCase().contains(q);
-  }
   List<String> get _allStates {
-    final all = vendorController.vendors
+    final list = vendorController.vendors
         .map((v) => v.state?.trim() ?? '')
         .where((s) => s.isNotEmpty)
-        .toSet()
         .toList();
-    all.sort();
-    return all;
+    return list.toSet().toList()..sort();
   }
 
-  Widget _highlight(String text) {
-    final query = _searchQuery.value;
-    if (query.isEmpty) return Text(text);
-
-    final pattern = RegExp(RegExp.escape(query), caseSensitive: false);
-    final matches = pattern.allMatches(text);
-
-    if (matches.isEmpty) return Text(text);
-
-    final spans = <TextSpan>[];
-    int lastEnd = 0;
-    for (final match in matches) {
-      if (match.start > lastEnd) {
-        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
-      }
-      spans.add(TextSpan(
-        text: text.substring(match.start, match.end),
-        style: const TextStyle(backgroundColor: Colors.yellow),
-      ));
-      lastEnd = match.end;
-    }
-    if (lastEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastEnd)));
-    }
-
-    return RichText(
-      text: TextSpan(style: const TextStyle(color: Colors.black), children: spans),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 8),
-          Text('$label:', style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(width: 4),
-          Expanded(child: _highlight(value)),
-        ],
-      ),
-    );
+  List<String> get _allCities {
+    final state = _selectedState.value.toLowerCase();
+    final list = vendorController.vendors.where((v) {
+      if (state.isEmpty) return true;
+      return v.state?.toLowerCase() == state;
+    }).map((v) => v.city?.trim() ?? '').where((c) => c.isNotEmpty).toList();
+    return list.toSet().toList()..sort();
   }
 
   @override
@@ -113,47 +56,50 @@ class _VendorsListScreenState extends State<VendorsListScreen> {
     return Obx(() {
       final filtered = vendorController.vendors.where((v) {
         final q = _searchQuery.value.toLowerCase();
-        final matchesSearch = (v.vendorName ?? '').toLowerCase().contains(q);
+        final name = v.vendorName?.toLowerCase() ?? '';
+        final city = v.city?.toLowerCase() ?? '';
+        final state = v.state?.toLowerCase() ?? '';
+
+        final matchesSearch = name.contains(q) || city.contains(q) || state.contains(q);
 
         final matchesState = _selectedState.value.isEmpty
-        ? true
+            ? true
             : (v.state?.toLowerCase() == _selectedState.value.toLowerCase());
 
         final matchesCity = _selectedCity.value.isEmpty
-        ? true
+            ? true
             : (v.city?.toLowerCase() == _selectedCity.value.toLowerCase());
 
         return matchesSearch && matchesState && matchesCity;
       }).toList();
 
-
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Vendors'),
+        appBar: CustomAppBar(
+          title: 'Vendors',
           actions: [
-            // ─── UPDATED: show filtered.length instead of total length ───
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
                 child: Text(
                   filtered.length.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primaryBlue),
                 ),
               ),
             ),
           ],
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(150), // bumped height
-            child: Padding(
+        ),
+        body: Column(
+          children: [
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 children: [
-                  Obx(() => Row(
+                  Row(
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           isExpanded: true,
-                          initialValue: _selectedState.value.isEmpty ? null : _selectedState.value,
+                          value: _selectedState.value.isEmpty ? null : _selectedState.value,
                           decoration: InputDecoration(
                             hintText: 'Filter by State',
                             border: OutlineInputBorder(
@@ -167,7 +113,7 @@ class _VendorsListScreenState extends State<VendorsListScreen> {
                           ],
                           onChanged: (v) {
                             _selectedState.value = v ?? '';
-                            _selectedCity.value = ''; // reset city
+                            _selectedCity.value = '';
                           },
                         ),
                       ),
@@ -175,7 +121,7 @@ class _VendorsListScreenState extends State<VendorsListScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           isExpanded: true,
-                          initialValue: _selectedCity.value.isEmpty ? null : _selectedCity.value,
+                          value: _selectedCity.value.isEmpty ? null : _selectedCity.value,
                           decoration: InputDecoration(
                             hintText: 'Filter by City',
                             border: OutlineInputBorder(
@@ -191,7 +137,7 @@ class _VendorsListScreenState extends State<VendorsListScreen> {
                         ),
                       ),
                     ],
-                  )),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _searchCtrl,
@@ -209,60 +155,51 @@ class _VendorsListScreenState extends State<VendorsListScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.blueAccent),
+                        borderSide: const BorderSide(color: AppColors.primaryBlue),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
+            Expanded(
+              child: vendorController.isLoading.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : filtered.isEmpty
+                      ? const Center(child: Text('No matching vendors'))
+                      : RefreshIndicator(
+                          onRefresh: () => vendorController.fetchVendors(),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: filtered.length,
+                            itemBuilder: (ctx, i) {
+                              final v = filtered[i];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: Colors.grey.shade200),
+                                ),
+                                child: ListTile(
+                                  onTap: () => Get.to(() => vendorview(vendor: v)),
+                                  title: Text(v.vendorName ?? 'No Name',
+                                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text('${v.city ?? ""}, ${v.state ?? ""}'),
+                                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+            ),
+          ],
         ),
-        body: vendorController.isLoading.value
-            ? const Center(child: CircularProgressIndicator())
-            : filtered.isEmpty
-            ? const Center(child: Text('No matching vendors'))
-            : ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: filtered.length,
-            itemBuilder: (ctx, i) {
-              final v = filtered[i];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ExpansionTile(
-                  initiallyExpanded: _searchQuery.value.isNotEmpty,
-                  leading: const Icon(Icons.store, size: 40),
-                  title:  _highlight(v.vendorCompany!),
-                  subtitle:_highlight(v.vendorName!),
-                  onExpansionChanged: (expanded) {
-                    if (expanded) {
-                      Get.to(() => vendorview(vendor: v));
-                    }
-                  },
-                  childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  children: [
-                    _buildDetailRow(Icons.phone, 'Phone', v.vendorPhone!),
-
-                    _buildDetailRow(Icons.email, 'Email', v.vendorEmail ?? ''),
-                    _buildDetailRow(Icons.badge, 'GSTIN', v.vendorGSTIN ??''),
-                    // _buildDetailRow(
-                    //   Icons.home,
-                    //   'Address',
-                    //   '${v.addressOne!}, ${v.addressTwo!}, ${v.city!}, ${v.state!} - ${v.pincode!}',
-                    // ),
-                  ],
-                ),
-              );
-            }
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: AppColors.primaryBlue,
+          onPressed: () => Get.to(() => const AddVendorScreen()),
+          child: const Icon(Icons.add, color: Colors.white),
         ),
-        // floatingActionButton: FloatingActionButton(
-        //   child: const Icon(Icons.add),
-        //   onPressed: () {
-        //     Get.to(() => const AddVendorScreen())?.then((_) => vendorController.fetchVendors());
-        //   },
-        // ),
       );
     });
   }

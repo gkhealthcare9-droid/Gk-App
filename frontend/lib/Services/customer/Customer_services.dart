@@ -1,394 +1,206 @@
-// lib/Services/Customer_service.dart
-
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:sales_grow/Models/Category/getcategory_model.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
-import 'package:sales_grow/Models/Employee/AddEmployee_model.dart';
+import 'package:sales_grow/Models/CustomerContact/CustomerContactModel.dart';
 import 'package:sales_grow/Utils/AppConstants.dart';
-
+import '../ApiService.dart';
 import '../../Models/Outstanding/Customer_outstanding_model.dart';
 import '../../Models/Outstanding/Outstanding_model.dart';
 
 class CustomerServices {
-  final Dio _dio = Dio();
+  final Dio _dio = ApiService().dio;
 
-
-  // Placeholder for fetching tasks
-  // Future<List<TaskModel>?> fetchTasks() async {
-  //   try {
-  //     final response = await http.get(Uri.parse('your_api_endpoint/tasks'));
-  //     if (response.statusCode == 200) {
-  //       final jsonData = jsonDecode(response.body);
-  //       return (jsonData as List).map((e) => TaskModel.fromJson(e)).toList();
-  //     }
-  //     return null;
-  //   } catch (e) {
-  //     throw Exception('Failed to fetch tasks: $e');
-  //   }
-  // }
-  /// Fetch all customers
   Future<List<CustomerModel>?> fetchCustomers() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.CUSTOMER}',
-      );
+      final response = await _dio.get(AppConstants.CUSTOMER);
 
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List)
             .map((item) => CustomerModel.fromJson(item))
             .toList();
-      } else {
-        print('Failed to fetch customers: ${response.statusCode}');
-        return null;
       }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching customers: $e');
       return null;
     }
   }
 
-  /// Fetch a single customer by its unique identifier
   Future<CustomerModel?> fetchByUnique(String unique) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.CUSTOMERByUNIQUE}/$unique',
-      );
+      final response = await _dio.get('${AppConstants.CUSTOMERByUNIQUE}/$unique');
 
       if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
         return CustomerModel.fromJson(response.data);
-      } else {
-        print('Failed to fetch customer: ${response.statusCode}');
-        return null;
       }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching customer by unique: $e');
       return null;
     }
   }
 
-  /// Fetch all employee‐position categories
-  Future<List<GetCategoryModel>?> fetchCategory() async {
+  Future<List<ContactPositionModel>?> fetchContactPositions() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) return null;
+      final response = await _dio.get(AppConstants.CONTACT_POSITION);
 
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.EmployeeCategory}',
+      if (response.statusCode == 200 && response.data is List) {
+        return (response.data as List)
+            .map((item) => ContactPositionModel.fromJson(item))
+            .toList();
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching contact positions: $e');
+      return null;
+    }
+  }
+
+  Future<Response> addContactPosition(String position) async {
+    try {
+      return await _dio.post(
+        AppConstants.CONTACT_POSITION,
+        data: {"position": position},
       );
+    } catch (e) {
+      print('Error adding contact position: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<GetCategoryModel>?> fetchCategoriesByType(String type) async {
+    try {
+      final response = await _dio.get('${AppConstants.CATEGORY}?type=$type');
 
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List)
             .map((item) => GetCategoryModel.fromJson(item))
             .toList();
-      } else {
-        print('Failed to fetch categories: ${response.statusCode}');
-        return null;
       }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching categories: $e');
       return null;
     }
   }
 
-  /// Create a new employee under the given customer
-  Future<Response> AddEmployee(AddEmployeeModel employee) async {
+  Future<Response> AddCustomerContact(AddCustomerContactModel contact) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.post(
-        '${AppConstants.BASE_URL}${AppConstants.Employee}/add',
-        data: employee.toJson(),
+      return await _dio.post(
+        '${AppConstants.CUSTOMER_CONTACT}/add',
+        data: contact.toJson(),
       );
-      return response;
-    } on DioException catch (e) {
-      print('Error during AddEmployee: ${e.response?.data}');
-      rethrow;
     } catch (e) {
-      print('Unexpected error during AddEmployee: $e');
+      print('Error adding customer contact: $e');
       rethrow;
     }
   }
 
-  /// Fetch all employees for a given customer ID
-  Future<List<GetEmployeeModel>?> fetchEmployees(String id) async {
+  Future<List<GetCustomerContactModel>?> fetchCustomerContacts(String id) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
       final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.Employee}/by-customer/$id',
+        '${AppConstants.CUSTOMER_CONTACT}/by-customer/$id',
       );
 
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List)
-            .map((item) => GetEmployeeModel.fromJson(item))
+            .map((item) => GetCustomerContactModel.fromJson(item))
             .toList();
-      } else {
-        print('Failed to fetch employees: ${response.statusCode}');
-        return null;
       }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching customer contacts: $e');
       return null;
     }
   }
 
-  /// Update an existing employee (by employeeId)
-  Future<Response> updateEmployee(
-    String employeeId,
-    AddEmployeeModel updated,
-  ) async {
+  Future<Response> updateCustomerContact(String contactId, AddCustomerContactModel updated) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.put(
-        '${AppConstants.BASE_URL}${AppConstants.Employee}/$employeeId',
+      return await _dio.put(
+        '${AppConstants.CUSTOMER_CONTACT}/$contactId',
         data: updated.toJson(),
       );
-      return response;
-    } on DioException catch (e) {
-      print('Error during updateEmployee: ${e.response?.data}');
-      rethrow;
     } catch (e) {
-      print('Unexpected error during updateEmployee: $e');
+      print('Error updating customer contact: $e');
       rethrow;
     }
   }
 
-  /// Delete an existing employee (by employeeId)
-  Future<Response> deleteEmployee(String employeeId) async {
+  Future<Response> deleteCustomerContact(String contactId) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.delete(
-        '${AppConstants.BASE_URL}${AppConstants.Employee}/$employeeId',
-      );
-      return response;
-    } on DioException catch (e) {
-      print('Error during deleteEmployee: ${e.response?.data}');
-      rethrow;
+      return await _dio.delete('${AppConstants.CUSTOMER_CONTACT}/$contactId');
     } catch (e) {
-      print('Unexpected error during deleteEmployee: $e');
+      print('Error deleting customer contact: $e');
       rethrow;
     }
   }
 
-  /// Create a new customer
   Future<Response> AddCustomer(AddCustomerModel customer) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      print(
-        '📤 Request URL: ${AppConstants.BASE_URL}${AppConstants.CUSTOMER}/add',
-      );
-      // print('📦 Payload: ${jsonEncode(customer.toJson())}');
-
-      final response = await _dio.post(
-        '${AppConstants.BASE_URL}${AppConstants.CUSTOMER}/add',
+      return await _dio.post(
+        '${AppConstants.CUSTOMER}/add',
         data: customer.toJson(),
       );
-
-      print('✅ Dio Response Status Code: ${response.statusCode}');
-      return response;
-    } on DioException catch (e) {
-      print('❌ DioException: ${e.message}');
-      print('❌ Dio Error Response: ${e.response?.data}');
-      rethrow;
     } catch (e) {
-      print('💥 Unexpected Error: $e');
+      print('Error adding customer: $e');
       rethrow;
     }
   }
 
-  /// Edit (update) an existing customer by ID
   Future<Response> editCustomer(String id, AddCustomerModel customer) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.put(
-        '${AppConstants.BASE_URL}${AppConstants.CUSTOMER}/$id',
+      return await _dio.put(
+        '${AppConstants.CUSTOMER}/$id',
         data: customer.toJson(),
       );
-      return response;
-    } on DioException catch (e) {
-      print('Error during editCustomer: ${e.response?.data}');
-      rethrow;
     } catch (e) {
-      print('Unexpected error during editCustomer: $e');
+      print('Error editing customer: $e');
       rethrow;
     }
   }
 
-  /// Delete an existing customer by ID
   Future<Response> deleteCustomer(String id) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.delete(
-        '${AppConstants.BASE_URL}${AppConstants.CUSTOMER}/$id',
-      );
-      return response;
-    } on DioException catch (e) {
-      print('Error during deleteCustomer: ${e.response?.data}');
-      rethrow;
+      return await _dio.delete('${AppConstants.CUSTOMER}/$id');
     } catch (e) {
-      print('Unexpected error during deleteCustomer: $e');
+      print('Error deleting customer: $e');
       rethrow;
     }
   }
 
-  /// Fetch all customer outstanding details
-  Future<CustomerOutstandingModel?> fetchAllCustomerOutstanding(
-    String id,
-  ) async {
+  Future<CustomerOutstandingModel?> fetchAllCustomerOutstanding(String id) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
+      final response = await _dio.get('${AppConstants.GETCUSTOMEROUTSTANDING}/$id');
 
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.GETCUSTOMEROUTSTANDING}/$id',
-      );
-
-      if ((response.statusCode == 200 || response.statusCode == 201) &&
-          response.data is Map<String, dynamic>) {
+      if ((response.statusCode == 200 || response.statusCode == 201) && response.data is Map<String, dynamic>) {
         return CustomerOutstandingModel.fromJson(response.data);
-      } else {
-        print('Failed to fetch customer outstanding: ${response.statusCode}');
-        return null;
       }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
-      return null;
-    }
-  }
-
-  Future<CustomerOutstandingModel?> fetchpayment(String id) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}/api/v1/customer/payment/add-payment',
-      );
-
-      if ((response.statusCode == 200 || response.statusCode == 201) &&
-          response.data is Map<String, dynamic>) {
-        return CustomerOutstandingModel.fromJson(response.data);
-      } else {
-        print('Failed to fetch customer outstanding: ${response.statusCode}');
-        return null;
-      }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
-      return null;
-    } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching customer outstanding: $e');
       return null;
     }
   }
 
   Future<List<OutstandingModel>?> fetchAllOutstanding() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}/api/v1/customer/payment',
-      );
+      final response = await _dio.get('/api/v1/customer/payment');
 
       if (response.statusCode == 200 && response.data is List) {
         return (response.data as List)
             .map((item) => OutstandingModel.fromJson(item))
             .toList();
-      } else {
-        print('Failed to fetch customer outstanding: ${response.statusCode}');
-        return null;
       }
-    } on DioException catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching all outstanding: $e');
       return null;
     }
   }
 
-  Future<Response> addOutstanding(
-    String customer,
-    int amount,
-    String type,
-    String invoiceNumber,
-    String description,
-  ) async {
+  Future<Response> addOutstanding(String customer, int amount, String type, String invoiceNumber, String description) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      if (token == null) throw Exception('Session expired, please login again.');
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
       final payload = {
         "customer": customer,
         "amount": amount,
@@ -396,16 +208,40 @@ class CustomerServices {
         "invoiceNumber": invoiceNumber,
         "description": description,
       };
-      final response = await _dio.post(
-        '${AppConstants.BASE_URL}/api/v1/customer/payment/add-payment',
+      return await _dio.post(
+        '/api/v1/customer/payment/add-payment',
         data: payload,
       );
-      return response;
-    } on DioException catch (e) {
-      print('Error during AddCustomer: ${e.response?.data}');
-      rethrow;
     } catch (e) {
-      print('Unexpected error during AddCustomer: $e');
+      print('Error adding outstanding: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> importCustomers(Uint8List bytes, String fileName) async {
+    try {
+      FormData formData = FormData.fromMap({
+        "file": MultipartFile.fromBytes(bytes, filename: fileName),
+      });
+
+      return await _dio.post(
+        AppConstants.EXCEL_IMPORT,
+        data: formData,
+      );
+    } catch (e) {
+      print('Error importing customers: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> exportCustomers() async {
+    try {
+      return await _dio.get(
+        AppConstants.EXCEL_EXPORT,
+        options: Options(responseType: ResponseType.bytes),
+      );
+    } catch (e) {
+      print('Error exporting customers: $e');
       rethrow;
     }
   }

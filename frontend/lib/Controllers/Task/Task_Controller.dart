@@ -3,7 +3,9 @@ import 'package:sales_grow/Models/TaskModel/GetTasks.dart';
 import 'package:sales_grow/Views/Widgets/CustomBottomNav.dart';
 import '../../Models/TaskModel/Task_Mode.dart';
 import '../../Services/Task/Task_Services.dart';
+import '../../Controllers/Dashboard/Dashboard_controller.dart';
 import '../../Views/Tasks/Task_Screen.dart';
+import '../../Views/Widgets/CustomAlert.dart';
 
 class TaskController extends GetxController {
   // Observables
@@ -27,7 +29,7 @@ class TaskController extends GetxController {
     } catch (e) {
       print(e);
       errorMessage.value = e.toString();
-      Get.snackbar('Error', 'Failed to fetch tasks: $e');
+      CustomAlert.error('Failed to fetch tasks: $e');
     } finally {
       isLoading.value = false;
     }
@@ -48,7 +50,7 @@ class TaskController extends GetxController {
     } catch (e) {
       print(e);
       errorMessage.value = e.toString();
-      Get.snackbar('Error', 'Failed to fetch all tasks: $e');
+      CustomAlert.error('Failed to fetch all tasks: $e');
     } finally {
       isLoading.value = false;
     }
@@ -62,6 +64,7 @@ class TaskController extends GetxController {
     String assignedTo,
     String dueDate,
     String priority,
+    String? customerId,
   ) async {
     try {
       isLoading.value = true;
@@ -72,16 +75,23 @@ class TaskController extends GetxController {
         assignedTo,
         dueDate,
         priority,
+        customerId,
       );
       if (created == true) {
-        Get.snackbar('Success', 'Task Assigned');
-        Get.offAll(() => CustomBottomNavBar());
+        CustomAlert.success('Task Assigned successfully!');
+        await allfetchTasks(); // Refresh the list
+        isLoading.value = false; // Reset loading BEFORE navigation
+        
+        // Wait for 2 seconds so user can see the alert
+        await Future.delayed(const Duration(seconds: 2));
+        
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
-        Get.snackbar('Error', 'Something Went Wrong');
+        CustomAlert.error('Something Went Wrong');
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar('Error', 'Failed to create task: $e');
+      CustomAlert.error('Failed to create task: $e');
     } finally {
       isLoading.value = false;
     }
@@ -102,7 +112,7 @@ class TaskController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar('Error', 'Failed to update task: $e');
+      CustomAlert.error('Failed to update task: $e');
       return false;
     } finally {
       isLoading.value = false;
@@ -120,13 +130,42 @@ class TaskController extends GetxController {
       print(success);
       if (success == true) {
         await allfetchTasks();
-        Get.snackbar('Success', 'Status Updated');
+        CustomAlert.success('Status Updated');
       } else {
-        Get.snackbar('Error', 'Something went Wrong');
+        CustomAlert.error('Something went Wrong');
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar('Error', 'Failed to update status: $e');
+      CustomAlert.error('Failed to update status: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Delete a task and refresh both the task list and dashboard stats
+  Future<void> deleteTask(String id) async {
+    try {
+      isLoading.value = true;
+      final success = await _taskService.deleteTask(id);
+      if (success) {
+        CustomAlert.success('Task deleted successfully!');
+        await allfetchTasks(); // Refresh list
+        
+        // Also refresh dashboard stats so counts stay accurate
+        try {
+          if (Get.isRegistered<DashboardController>()) {
+             final DashboardController dashboardController = Get.find<DashboardController>();
+             await dashboardController.fetchStats();
+          }
+        } catch (e) {
+          print('DashboardController stats refresh failed: $e');
+        }
+      } else {
+        CustomAlert.error('Failed to delete task');
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      CustomAlert.error('Deletion error: $e');
     } finally {
       isLoading.value = false;
     }
@@ -144,7 +183,7 @@ class TaskController extends GetxController {
           filterState.selectedCategories.contains(task.taskCategory);
       bool matchesAssignedTo =
           filterState.selectedAssignedTo.isEmpty ||
-          filterState.selectedAssignedTo.contains(task.assignedTo.name);
+          (task.assignedTo != null && filterState.selectedAssignedTo.contains(task.assignedTo!.name));
       bool matchesPriority =
           filterState.selectedPriorities.isEmpty ||
           filterState.selectedPriorities.contains(task.priority);

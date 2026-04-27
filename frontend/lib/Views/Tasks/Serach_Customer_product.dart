@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:sales_grow/Controllers/Product/Product.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -370,14 +371,8 @@ class ProductDetailScreen extends StatelessWidget {
                     final copyText = '''product name: ${product.productName ?? 'N/A'}
 product id: ${product.productId?.toString() ?? 'N/A'}''';
                     Clipboard.setData(ClipboardData(text: copyText));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Product details copied to clipboard'),
-                        backgroundColor: Colors.blue,
-                      ),
-                    );
-                  },
-                ),
+                    CustomAlert.info('Product details copied to clipboard');
+                  },),
               ),
             ],
           ),
@@ -559,9 +554,7 @@ product id: ${product.productId?.toString() ?? 'N/A'}''';
       }
     } catch (e) {
       print('Error generating or sharing PDF: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to share product details: $e')),
-      );
+      CustomAlert.error('Failed to share product details: $e');
     }
   }
 

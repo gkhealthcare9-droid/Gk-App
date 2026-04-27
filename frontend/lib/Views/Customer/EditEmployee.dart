@@ -1,16 +1,18 @@
 // lib/Screens/Customers/EditEmployeeScreen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:sales_grow/Controllers/AddCustomer/Customer_controller.dart';
-import 'package:sales_grow/Models/Employee/AddEmployee_model.dart';
+import 'package:sales_grow/Models/CustomerContact/CustomerContactModel.dart';
 import 'package:sales_grow/Views/Widgets/CustomButton.dart';
 import 'package:sales_grow/Views/Widgets/CustomDropDown.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
+import 'package:sales_grow/Views/Widgets/CustomBottomNav.dart'; // Add this import
 
 class EditEmployeeScreen extends StatefulWidget {
-  final GetEmployeeModel employee;
+  final GetCustomerContactModel employee;
   final String customerId;
 
   const EditEmployeeScreen({
@@ -28,8 +30,8 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
 
   late TextEditingController nameController;
   late TextEditingController phoneController;
+  late TextEditingController phoneController2;
   late TextEditingController emailController; // New email controller
-  DateTime? selectedDob;
   String? selectedPositionId;
 
   @override
@@ -39,13 +41,13 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
     // Initialize controllers with existing employee data
     nameController = TextEditingController(text: widget.employee.name);
     phoneController = TextEditingController(text: widget.employee.phone);
+    phoneController2 = TextEditingController(text: widget.employee.phone2);
     emailController = TextEditingController(text: widget.employee.email); // Initialize email
-    selectedDob = widget.employee.dob;
     selectedPositionId = widget.employee.position?.id;
 
-    // Ensure categories are loaded
+    // Ensure positions are loaded
     Future.delayed(Duration.zero, () {
-      _customerController.fetchCategories();
+      _customerController.fetchContactPositions();
     });
   }
 
@@ -53,75 +55,81 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
   void dispose() {
     nameController.dispose();
     phoneController.dispose();
+    phoneController2.dispose();
     emailController.dispose(); // Dispose email controller
     super.dispose();
   }
 
-  /// Opens the date picker and updates `selectedDob`
-  Future<void> _pickDob() async {
-    final initial = selectedDob ?? DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        selectedDob = picked;
-      });
-    }
-  }
 
   /// Validates inputs and calls the controller’s `updateEmployee` method
   void _onUpdatePressed() {
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
+    final phone2 = phoneController2.text.trim();
     final email = emailController.text.trim();
 
     if (name.isEmpty) {
-      Get.snackbar('Validation Error', 'Name is required');
+      CustomAlert.error('Name is required');
       return;
     }
     if (phone.isEmpty) {
-      Get.snackbar('Validation Error', 'Phone number is required');
+      CustomAlert.error('Phone number is required');
       return;
     }
-    if (email.isEmpty) {
-      Get.snackbar('Validation Error', 'Email is required');
+    if (phone.length != 10) {
+      CustomAlert.error('Phone number must be exactly 10 digits');
       return;
     }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      Get.snackbar('Validation Error', 'Invalid email format');
+    if (!RegExp(r'^[6-9]').hasMatch(phone)) {
+      CustomAlert.error('Phone number must start with 6, 7, 8, or 9');
       return;
     }
-    if (selectedDob == null) {
-      Get.snackbar('Validation Error', 'Please select Date of Birth');
+    if (email.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      CustomAlert.error('Invalid email format');
       return;
+    }
+    if (phone2.isNotEmpty) {
+      if (phone2.length != 10) {
+        CustomAlert.error('Alternative phone must be 10 digits');
+        return;
+      }
+      if (!RegExp(r'^[6-9]').hasMatch(phone2)) {
+        CustomAlert.error('Alternative phone must start with 6, 7, 8, or 9');
+        return;
+      }
     }
     if (selectedPositionId == null) {
-      Get.snackbar('Validation Error', 'Please select a position');
+      CustomAlert.error('Please select a position');
       return;
     }
 
-    // Construct an updated AddEmployeeModel
-    final updatedEmployee = AddEmployeeModel(
+    // Uniqueness check for Customer Contact Mobile Number (excluding current record)
+    final isDuplicate = _customerController.hospitalContacts.any((c) => c.phone == phone && c.id != widget.employee.id);
+    if (isDuplicate) {
+      CustomAlert.error('This mobile number is already registered for this hospital');
+      return;
+    }
+
+    // Construct an updated AddCustomerContactModel
+    final updatedContact = AddCustomerContactModel(
       name: name,
       phone: phone,
+      phone2: phone2,
       email: email, // Include email
-      dob: selectedDob,
       position: selectedPositionId,
       customer: widget.customerId,
     );
 
     // Call update method
     _customerController
-        .updateEmployee(widget.employee.id!, updatedEmployee)
-        .then((success) {
+        .updateCustomerContact(widget.employee.id!, updatedContact)
+        .then((success) async {
       if (success) {
-        Get.back();
+        CustomAlert.success('Contact updated successfully');
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
-        Get.snackbar('Error', 'Failed to update employee');
+        CustomAlert.error('Failed to update contact');
       }
     });
   }
@@ -130,7 +138,7 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Employee'),
+        title: const Text('Edit Contact'),
       ),
       body: Obx(() {
         if (_customerController.isLoading.value) {
@@ -144,10 +152,10 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
               // 1) Position Dropdown
               CustomDropdownField(
                 value: selectedPositionId,
-                items: _customerController.categoryList.map((category) {
+                items: _customerController.contactPositionList.map((pos) {
                   return DropdownMenuItem<String>(
-                    value: category.id,
-                    child: Text(category.category ?? 'Unnamed'),
+                    value: pos.id,
+                    child: Text(pos.position ?? 'Unnamed'),
                   );
                 }).toList(),
                 onChanged: (val) {
@@ -157,16 +165,18 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
                 },
                 hintText: 'Position',
                 icon: Icons.list,
+                isRequired: true,
               ),
               const SizedBox(height: 16),
               // 2) Name Field
               CustomTextField(
                 label: 'Name',
-                hintText: 'Enter Employee Name',
+                hintText: 'Enter Contact Name',
                 controller: nameController,
                 obscureText: false,
                 showSuffixIcon: false,
                 icon: Icons.person,
+                isRequired: true,
               ),
               const SizedBox(height: 16),
               // 3) Phone Field
@@ -177,6 +187,20 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
                 obscureText: false,
                 showSuffixIcon: false,
                 icon: Icons.call,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                isRequired: true,
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Alternative Phone',
+                hintText: 'Optional secondary number',
+                controller: phoneController2,
+                obscureText: false,
+                showSuffixIcon: false,
+                icon: Icons.call_merge,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
               ),
               const SizedBox(height: 16),
               // 4) Email Field
@@ -187,39 +211,6 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
                 obscureText: false,
                 showSuffixIcon: false,
                 icon: Icons.email,
-              ),
-              const SizedBox(height: 16),
-              // 5) DOB Picker
-              InkWell(
-                onTap: _pickDob,
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Date of Birth',
-                    labelStyle: const TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    prefixIcon: const Icon(Icons.calendar_today),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        selectedDob != null
-                            ? DateFormat('dd-MM-yyyy').format(selectedDob!)
-                            : 'Select date',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const Icon(Icons.arrow_drop_down),
-                    ],
-                  ),
-                ),
               ),
               const SizedBox(height: 40),
               // 6) Update Button

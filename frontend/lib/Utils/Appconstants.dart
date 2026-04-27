@@ -1,75 +1,57 @@
-class AppConstants
+class AppConstants {
+  // base
+  static const String BASE_URL = 'https://gk-app-production-45a2.up.railway.app';
 
-{
-  //base
-
-  // static const String BASE_URL = 'http://10.208.248.98:3007'; // Machine IP
-  // static const String BASE_URL = 'http://10.0.2.2:3007'; // Use this for Android Emulator
-  // static const String BASE_URL = 'http://localhost:3007'; // Use this for Web/iOS Simulator
-  static const String BASE_URL = 'https://gk-app-production-45a2.up.railway.app'; // Production Railway URL
-
-
-
-  //login
-
+  // login
   static const String LOGIN = '/api/v1/user/login';
   static const String SIGNUP = '/api/v1/user/add';
   static const String USERPROFILE = '/api/v1/user/profile';
 
-
-  //Users
-
+  // Users
   static const String GETUSERS = '/api/v1/user/all';
-  //customer
 
+  // customer
   static const String CUSTOMER = '/api/v1/customer';
   static const String CUSTOMERByUNIQUE = '/api/v1/customer/by-unique';
 
-  //vendor
-
+  // vendor
   static const String VENDORByUNIQUE = '/api/v1/vendor/by-unique';
   static const String VENDOR = '/api/v1/vendor';
   static const String VENDOREMPLOYEE = '/api/v1/vendor-employee';
   static const String VENDOREMPLOYEECATEGORY = '/api/v1/vendor-employee/category';
 
-  //employee
-
-  static const String Employee = '/api/v1/employee';
+  // employee (Internal Staff)
+  static const String Employee = '/api/v1/user/all';
   static const String EmployeeCategory = '/api/v1/employee/category';
 
-  //wallet
+  // customer contact (Hospital Side)
+  static const String CUSTOMER_CONTACT = '/api/v1/customer-contact';
+  static const String CONTACT_POSITION = '/api/v1/customer-contact/position';
 
+  // wallet
   static const String GETWALLET = '/api/v1/expenses/get-wallet';
   static const String TRANSCATIONS = '/api/v1/expenses/transactions';
   static const String EXPENSESCATEGORY = '/api/v1/expenses/category';
   static const String FUNDSWITHDRAW = '/api/v1/expenses/withdraw-funds';
   static const String GETCUSTOMEROUTSTANDING = '/api/v1/customer/payment/customer';
-  static const String AllOUTSTANDING = 'api/v1/customer/payment';
+  static const String AllOUTSTANDING = '/api/v1/customer/payment';
 
-
-  //product
-
+  // product
   static const String GETPRODUCT = '/api/v1/product/product';
   static const String CATEGORYPRODUCT = '/api/v1/product/category';
   static const String ADDPRODUCT = '/api/v1/customer/product/add';
   static const String GETPRODUCTBYCUSTOMER = '/api/v1/customer/product/by-customer';
   static const String DELETEPRODUCT = "/api/v1/product/delete";
-  static const String UPDATEPRODUCT = "/product/update"; // Replace with your real API path
+  static const String UPDATEPRODUCT = "/api/v1/product/update";
 
-
-
-  //Manufacturer
-
+  // Manufacturer
   static const String GETMANUFACTURER = '/api/v1/product/manufacturer';
   static const String PRODUCTMANUFACTURER = '/api/v1/customer/product/manufacturer';
 
-
-  //reports
-
+  // reports
   static const String INSTALLATIONREPORT = '/api/v1/installation-report';
 
-
-  //leads
+  // leads
   static const String POSTLEADS = '/api/v1/lead';
 
   // Dashboard Stats
@@ -77,11 +59,14 @@ class AppConstants
   
   // Import
   static const String EXCEL_IMPORT = '/api/v1/import/excel';
+  static const String EXCEL_EXPORT = '/api/v1/export/customers';
+  
+  // Routes
+  static const String routeCustomers = '/CustomersList';
   
   // Classification
   static const String CATEGORY = '/api/v1/category';
   
   // Location
   static const String LOCATION = '/api/v1/location';
-
 }

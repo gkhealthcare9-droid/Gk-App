@@ -15,6 +15,7 @@ import 'package:sales_grow/Controllers/Report/Report_controller.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:signature/signature.dart';
 import '../ReportDesign/incidentReportView.dart';
 import '../../Models/product/customer_product.dart';
@@ -346,8 +347,7 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
     if (_hospitalName.text.isEmpty ||
         _slNumberController.text.isEmpty ||
         _signedByController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
+      CustomAlert.error(
         'Please fill in hospital details, serial number, and signature',
       );
       return;
@@ -368,17 +368,15 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
 
         final result = await OpenFile.open(tempFile.path);
         if (result.type == ResultType.done) {
-          Get.snackbar(
-            'Success',
+          CustomAlert.success(
             'PDF generated and opened successfully',
-            backgroundColor: Colors.white,
-            icon: Icon(Icons.verified, color: Colors.green),
           );
         } else {
-          Get.snackbar('Error', 'Could not open PDF: ${result.message}');
+          CustomAlert.error('Could not open PDF: ${result.message}');
         }
       }
 
+      await Future.delayed(const Duration(seconds: 2));
       Get.to(
         () => ServiceQuotationScreen(
           customerCode: _uniqueCode.text,
@@ -387,7 +385,7 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
         ),
       );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to generate PDF: $e');
+      CustomAlert.error('Failed to generate PDF: $e');
     }
   }
 
@@ -395,8 +393,7 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
     if (_hospitalName.text.isEmpty ||
         _slNumberController.text.isEmpty ||
         _signedByController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
+      CustomAlert.error(
         'Please fill in hospital details, serial number, and signature',
       );
       return;
@@ -412,12 +409,10 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
         await tempFile.writeAsBytes(pdfBytes);
       }
 
-      Get.snackbar(
-        'Success',
+      CustomAlert.success(
         'PDF generated and saved successfully',
-        backgroundColor: Colors.white,
-        icon: Icon(Icons.verified, color: Colors.green),
       );
+      await Future.delayed(const Duration(seconds: 2));
       Get.to(
         () => ServiceQuotationScreen(
           customerCode: _uniqueCode.text,
@@ -426,7 +421,7 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
         ),
       );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to generate PDF: $e');
+      CustomAlert.error('Failed to generate PDF: $e');
     }
   }
 
@@ -1197,8 +1192,7 @@ class _IncidentReportscreenState extends State<IncidentReportscreen> {
                                       _currentQuantity = null;
                                     });
                                   } else {
-                                    Get.snackbar(
-                                      'Error',
+                                    CustomAlert.error(
                                       'Please select a spare part and quantity',
                                     );
                                   }

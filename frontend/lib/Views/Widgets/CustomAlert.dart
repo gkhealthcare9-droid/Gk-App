@@ -1,99 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../Utils/Colors.dart';
 
 class CustomAlert {
-  static void success(String message, {String title = "Success"}) {
-    _show(
-      title: title,
-      message: message,
-      backgroundColor: Colors.green.shade600,
-      icon: Icons.check_circle_outline,
-    );
+  /// Displays a success snackbar.
+  static void success(String message, {String title = "Success", BuildContext? context}) {
+    _show(Colors.green, message, title, Icons.check_circle_outline);
   }
 
-  static void error(String message, {String title = "Error"}) {
-    _show(
-      title: title,
-      message: message,
-      backgroundColor: Colors.red.shade600,
-      icon: Icons.error_outline,
-    );
+  /// Displays a success snackbar (named parameters version).
+  static void showSuccess({BuildContext? context, required String message, String title = "Success"}) {
+    _show(Colors.green, message, title, Icons.check_circle_outline);
   }
 
-  static void info(String message, {String title = "Note"}) {
-    _show(
-      title: title,
-      message: message,
-      backgroundColor: AppColors.primaryBlue,
-      icon: Icons.info_outline,
-    );
+  /// Displays an error snackbar.
+  static void error(String message, {String title = "Error", BuildContext? context}) {
+    _show(Colors.red, message, title, Icons.error_outline);
   }
 
-  static void _show({
-    required String title,
-    required String message,
-    required Color backgroundColor,
-    required IconData icon,
-  }) {
-    // Definitive Flutter-compatible scheduling
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Automatic self-dismissal after 2 seconds
-      Future.delayed(const Duration(seconds: 2), () {
-        if (Get.isDialogOpen!) {
-          Get.back();
-        }
-      });
+  /// Displays an error snackbar (named parameters version).
+  static void showError({BuildContext? context, required String message, String title = "Error"}) {
+    _show(Colors.red, message, title, Icons.error_outline);
+  }
 
-      if (!Get.isDialogOpen!) {
-        Get.dialog(
-          Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            backgroundColor: Colors.white,
-            elevation: 10,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: backgroundColor.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: backgroundColor, size: 45),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.black,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.grey.withOpacity(0.75),
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          barrierDismissible: false, // User doesn't need to tap outside, it auto-dismisses
-          transitionCurve: Curves.easeOutBack,
-        );
-      }
-    });
+  /// Displays an info snackbar.
+  static void info(String message, {String title = "Note", BuildContext? context}) {
+    _show(Colors.blue, message, title, Icons.info_outline);
+  }
+
+  /// Displays a warning snackbar.
+  static void warning(String message, {String title = "Warning", BuildContext? context}) {
+    _show(Colors.orange, message, title, Icons.warning_amber_rounded);
+  }
+
+  /// Displays a loading snackbar (not recommended, but kept for compatibility).
+  static void loading({String message = "Please wait...", BuildContext? context}) {
+    _show(Colors.blueGrey, message, "Loading", Icons.hourglass_empty);
+  }
+
+  /// Internal method to show GetX snackbar.
+  static void _show(Color color, String message, String title, IconData icon) {
+    if (Get.isSnackbarOpen) {
+       Get.closeCurrentSnackbar();
+    }
+
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: color.withOpacity(0.9),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(15),
+      borderRadius: 10,
+      icon: Icon(icon, color: Colors.white),
+      duration: const Duration(seconds: 3),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
+    );
   }
 }

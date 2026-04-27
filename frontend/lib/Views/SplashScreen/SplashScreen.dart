@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import '../../Services/AuthServices/SecureStorageService.dart';
 
 import '../AuthScreens/LoginScreen.dart';
 import '../Widgets/CustomBottomNav.dart';
@@ -44,8 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('authToken');
+    final token = await SecureStorageService.getToken();
 
     if (token != null && token.isNotEmpty) {
       final isExpired = JwtDecoder.isExpired(token);
@@ -54,6 +54,8 @@ class _SplashScreenState extends State<SplashScreen> {
         Get.offAll(() => CustomBottomNavBar());
         return;
       } else {
+        await SecureStorageService.clearAll();
+        final prefs = await SharedPreferences.getInstance();
         await prefs.remove('authToken');
       }
     }

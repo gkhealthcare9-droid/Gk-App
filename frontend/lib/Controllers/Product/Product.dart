@@ -7,6 +7,7 @@ import 'package:sales_grow/Models/product/product_category_model.dart';
 import 'package:sales_grow/Services/Product/Get_product_services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
+import 'package:sales_grow/Views/Widgets/CustomBottomNav.dart';
 
 class ProductController extends GetxController {
   var isLoading = false.obs;
@@ -62,7 +63,9 @@ class ProductController extends GetxController {
       if (products.isEmpty) {
         await fetchProducts();
       }
-      final product = products.firstWhereOrNull((p) => p.productId == productId);
+      final product = products.firstWhereOrNull(
+        (p) => p.productId == productId,
+      );
       return product;
     } catch (e) {
       CustomAlert.error("Failed to fetch product: $e");
@@ -93,6 +96,8 @@ class ProductController extends GetxController {
       if (success) {
         CustomAlert.success('Product added successfully');
         await fetchProducts();
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
         CustomAlert.error('Failed to add product');
       }
@@ -123,6 +128,8 @@ class ProductController extends GetxController {
       if (success) {
         CustomAlert.success("Product updated successfully");
         await fetchProducts();
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       }
       return success;
     } catch (e) {
@@ -154,7 +161,7 @@ class ProductController extends GetxController {
       if (fetched != null) {
         products.assignAll(fetched);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       CustomAlert.error("Network error: ${e.message}");
     } catch (e) {
       CustomAlert.error("Failed to fetch products: $e");
@@ -189,6 +196,8 @@ class ProductController extends GetxController {
       if (success) {
         CustomAlert.success('Customer product added successfully');
         await fetchCustomerProducts(customerId);
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
         CustomAlert.error('Failed to add customer product');
       }
@@ -216,7 +225,9 @@ class ProductController extends GetxController {
 
   Future<bool> deleteCustomerProduct(String customerProductId) async {
     try {
-      final success = await _productservices.deleteCustomerProduct(customerProductId);
+      final success = await _productservices.deleteCustomerProduct(
+        customerProductId,
+      );
       if (success) {
         customerProducts.removeWhere((p) => p.id == customerProductId);
         CustomAlert.success("Customer product deleted");
@@ -229,7 +240,10 @@ class ProductController extends GetxController {
     }
   }
 
-  Future<bool> updateCustomerProduct(String productId, PostCustomerProductModel updatedProduct) async {
+  Future<bool> updateCustomerProduct(
+    String productId,
+    PostCustomerProductModel updatedProduct,
+  ) async {
     try {
       final success = await _productservices.updateCustomerProduct(
         id: productId,
@@ -245,6 +259,8 @@ class ProductController extends GetxController {
       if (success) {
         CustomAlert.success("Customer product updated");
         await fetchCustomerProducts(updatedProduct.customer);
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       }
       return success;
     } catch (e) {

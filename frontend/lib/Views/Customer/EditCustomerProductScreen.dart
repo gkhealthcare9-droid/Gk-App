@@ -7,6 +7,8 @@ import 'package:sales_grow/Controllers/Product/Product.dart';
 import 'package:sales_grow/Models/product/customer_product.dart';
 import 'package:sales_grow/Utils/Colors.dart';
 
+import '../Widgets/CustomAlert.dart';
+
 class EditCustomerProductScreen extends StatefulWidget {
   final CustomerProduct product;
 
@@ -89,15 +91,13 @@ class _EditCustomerProductScreenState extends State<EditCustomerProductScreen> {
 
     if (_soldDate == null || _warrantyDate == null) {
       print('❗ Missing sold or warranty date');
-      Get.snackbar('Missing Dates', 'Sold Date and Warranty Date are required.',
-          backgroundColor: AppColors.yellow.withOpacity(0.2), colorText: AppColors.black);
+      CustomAlert.error('Sold Date and Warranty Date are required.');
       return;
     }
 
     if (_selectedCategoryId == null || _selectedManufacturerId == null) {
       print('❗ Missing dropdown selection');
-      Get.snackbar('Missing Selection', 'Please select both Category and Manufacturer.',
-          backgroundColor: AppColors.yellow.withOpacity(0.2), colorText: AppColors.black);
+      CustomAlert.error('Please select both Category and Manufacturer.');
       return;
     }
 
@@ -123,12 +123,11 @@ class _EditCustomerProductScreenState extends State<EditCustomerProductScreen> {
     print('✅ updateCustomerProduct returned: $success');
 
     if (success) {
+      CustomAlert.success('Customer product updated successfully');
+      await Future.delayed(const Duration(seconds: 2));
       Get.back(result: true);
-      Get.snackbar('Updated', 'Customer product updated successfully',
-          backgroundColor: Colors.green.shade100, colorText: AppColors.black);
     } else {
-      Get.snackbar('Failed', 'Failed to update customer product',
-          backgroundColor: Colors.red.shade100, colorText: AppColors.black);
+      CustomAlert.error('Failed to update customer product');
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../Utils/Colors.dart';
 import 'CustomBackButton.dart';
@@ -28,7 +29,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         centerTitle: true,
         leading: CustomBackButton(
-          onTap: onBack ?? () => Navigator.of(context).maybePop(),
+          onTap: onBack ?? () => Get.back(),
         ),
         title: title != null && title!.isNotEmpty
             ? Text(

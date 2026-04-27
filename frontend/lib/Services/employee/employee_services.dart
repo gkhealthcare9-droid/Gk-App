@@ -1,35 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:sales_grow/Models/Employee/AddEmployee_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../ApiService.dart';
 
-import '../../Utils/Appconstants.dart';
+class Employeeservices {
+  final Dio _dio = ApiService().dio;
 
-class Employeeservices{
-  final Dio _dio = Dio();
   Future<List<GetEmployeeModel>?> fetchEmployees(String id) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.Employee}/$id',
-      );
+      final response = await _dio.get('/api/v1/user/by-customer/$id');
 
       if (response.statusCode == 200) {
         if (response.data is List) {
           return (response.data as List)
               .map((item) => GetEmployeeModel.fromJson(item))
               .toList();
-        } else {
-          print('Unexpected data format: ${response.data}');
-          return null;
         }
+        return null;
       } else {
-        print('Failed to fetch customers: ${response.statusCode}');
         return null;
       }
     } on DioException catch (e) {
@@ -41,13 +28,13 @@ class Employeeservices{
     }
   }
 
-}
-
-
-class VendorEmployeeServices{
-  final Dio _dio = Dio();
-
-
-
-
+  Future<bool> updateStaff(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('/api/v1/user/$id', data: data);
+      return response.statusCode == 200 || response.statusCode == 201;
+    } on DioException catch (e) {
+      print('Update staff error: ${e.response?.data}');
+      return false;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sales_grow/Controllers/AddVendor/vendor_controller.dart';
+import '../Widgets/CustomAppBar.dart';
 import '../../Controllers/Location/Location_controller.dart';
 import '../../Models/Vendor/Vendor.dart';
 import '../Widgets/CustomButton.dart';
@@ -80,13 +81,8 @@ class _AddVendorScreenState extends State<AddVendorScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        leading: CustomBackButton(onTap: () => Get.back()),
-        title: const Text('NEW VENDOR PARTNER', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+      appBar: const CustomAppBar(
+        title: 'Add Vendor',
       ),
       body: Obx(() {
         if (_vendorController.isLoading.value) {

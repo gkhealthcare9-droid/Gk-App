@@ -8,6 +8,8 @@ import 'package:sales_grow/Views/Vendor/AddVendor_Product_Screen.dart';
 import 'package:sales_grow/Views/Vendor/AddvendorEmployee.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../Widgets/CustomAlert.dart';
+import '../../Utils/Colors.dart';
 
 import '../../Controllers/Product/Product.dart';
 import 'Edit_VendorEmployee.dart';
@@ -55,7 +57,7 @@ class _vendorviewState extends State<vendorview> {
 
   Future<void> _openWhatsApp(String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
-      Get.snackbar('Error', 'No phone number provided');
+      CustomAlert.showError(context: context, message: 'No phone number provided');
       return;
     }
 
@@ -67,7 +69,7 @@ class _vendorviewState extends State<vendorview> {
     } else if (digitsOnly.length == 12 && digitsOnly.startsWith('91')) {
       // OK
     } else if (digitsOnly.length < 10) {
-      Get.snackbar('Error', 'Invalid phone number format.');
+      CustomAlert.showError(context: context, message: 'Invalid phone number format.');
       return;
     }
 
@@ -94,7 +96,7 @@ class _vendorviewState extends State<vendorview> {
           mode: LaunchMode.platformDefault,
         );
       } catch (e) {
-        Get.snackbar('Error', 'Could not open WhatsApp or browser.');
+        CustomAlert.showError(context: context, message: 'Could not open WhatsApp or browser.');
       }
     }
   }
@@ -152,13 +154,13 @@ class _vendorviewState extends State<vendorview> {
 
   Future<void> _launchPhoneCall(String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
-      Get.snackbar('Error', 'No phone number provided');
+      CustomAlert.showError(context: context, message: 'No phone number provided');
       return;
     }
 
     final cleanPhone = phoneNumber.replaceAll(RegExp(r'\D'), '');
     if (!RegExp(r'^\d{10}$').hasMatch(cleanPhone)) {
-      Get.snackbar('Error', 'Invalid phone number format');
+      CustomAlert.showError(context: context, message: 'Invalid phone number format');
       return;
     }
 
@@ -167,10 +169,10 @@ class _vendorviewState extends State<vendorview> {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
       } else {
-        Get.snackbar('Error', 'Unable to make phone call');
+        CustomAlert.showError(context: context, message: 'Unable to make phone call');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to initiate call: $e');
+      CustomAlert.showError(context: context, message: 'Failed to initiate call: $e');
     }
   }
 
@@ -182,8 +184,11 @@ class _vendorviewState extends State<vendorview> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primaryBlue, size: 20),
+          onPressed: () => Get.back(),
+        ),
         title: Text(c.vendorCompany ?? c.vendorName ?? 'Vendor'),
-
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -224,7 +229,7 @@ class _vendorviewState extends State<vendorview> {
                               },
                             );
                           } else {
-                            Get.snackbar('Error', 'Invalid vendor ID');
+                            CustomAlert.showError(context: context, message: 'Invalid vendor ID');
                           }
                         },
                       ),
@@ -300,7 +305,7 @@ class _vendorviewState extends State<vendorview> {
                               },
                             );
                           } else {
-                            Get.snackbar('Error', 'Invalid employee ID');
+                            CustomAlert.showError(context: context, message: 'Invalid employee ID');
                           }
                         },
                       ),

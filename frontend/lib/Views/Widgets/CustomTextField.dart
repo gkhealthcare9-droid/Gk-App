@@ -37,6 +37,7 @@ class CustomTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final int maxLines;
   final FocusNode? focusNode;
+  final bool isRequired;
 
   const CustomTextField({
     super.key,
@@ -53,6 +54,7 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
     this.focusNode,
+    this.isRequired = false,
   });
 
   @override
@@ -62,24 +64,10 @@ class CustomTextField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4.0),
-            child: Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryBlue,
-                letterSpacing: 1.0,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16),
-              // REMOVED OUTLINE: Using a subtle shadow instead for a cleaner, modern look
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.02),
@@ -96,7 +84,10 @@ class CustomTextField extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: AppColors.primaryBlue),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Icon(icon, size: 20, color: AppColors.primaryBlue),
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: TextFormField(
@@ -109,15 +100,39 @@ class CustomTextField extends StatelessWidget {
                     focusNode: focusNode,
                     style: const TextStyle(fontSize: 15, color: AppColors.black, fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
+                      label: RichText(
+                        text: TextSpan(
+                          text: label.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.grey.withOpacity(0.5),
+                          ),
+                          children: [
+                            if (isRequired)
+                              const TextSpan(
+                                text: ' *',
+                                style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                          ],
+                        ),
+                      ),
+                      floatingLabelStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryBlue,
+                        letterSpacing: 1.0,
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       errorBorder: InputBorder.none,
                       disabledBorder: InputBorder.none,
                       hintText: hintText,
-                      hintStyle: TextStyle(color: AppColors.grey.withOpacity(0.5), fontWeight: FontWeight.normal),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                      errorStyle: const TextStyle(height: 0), // Hide default error text to keep it clean
+                      hintStyle: TextStyle(color: AppColors.grey.withOpacity(0.3), fontWeight: FontWeight.normal),
+                      contentPadding: const EdgeInsets.only(top: 22, bottom: 2),
+                      errorStyle: const TextStyle(color: Colors.red, fontSize: 11, height: 1),
                     ),
                   ),
                 ),
@@ -129,7 +144,9 @@ class CustomTextField extends StatelessWidget {
                       size: 20,
                       color: AppColors.grey.withOpacity(0.5),
                     ),
-                  ),
+                  )
+                else
+                  const SizedBox(width: 40),
               ],
             ),
           ),
@@ -154,6 +171,7 @@ class CustomDatePickerField extends StatelessWidget {
   final DateTime? selectedDate;
   final ValueChanged<DateTime> onDateSelected;
   final Widget? footer;
+  final bool isRequired;
 
   const CustomDatePickerField({
     super.key,
@@ -163,6 +181,7 @@ class CustomDatePickerField extends StatelessWidget {
     this.selectedDate,
     required this.onDateSelected,
     this.footer,
+    this.isRequired = false,
   });
 
   @override
@@ -176,24 +195,10 @@ class CustomDatePickerField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4.0),
-            child: Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryBlue,
-                letterSpacing: 1.0,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16),
-              // REMOVED OUTLINE: Soft shadow integration
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.02),
@@ -230,24 +235,61 @@ class CustomDatePickerField extends StatelessWidget {
                   onDateSelected(pickedDate);
                 }
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 20, color: AppColors.primaryBlue),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        selectedDate != null ? formattedDate : hintText,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: selectedDate != null ? AppColors.black : AppColors.grey.withOpacity(0.5),
-                        ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Icon(icon, size: 20, color: AppColors.primaryBlue),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 22, bottom: 10),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Floating Label
+                          Positioned(
+                            top: selectedDate != null ? -12 : 0,
+                            left: 0,
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 200),
+                              style: TextStyle(
+                                fontSize: selectedDate != null ? 12 : 13,
+                                fontWeight: selectedDate != null ? FontWeight.w800 : FontWeight.w600,
+                                color: selectedDate != null ? AppColors.primaryBlue : AppColors.grey.withOpacity(0.5),
+                                letterSpacing: selectedDate != null ? 1.0 : 0.0,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(label.toUpperCase()),
+                                  if (isRequired)
+                                    const Text(
+                                      ' *',
+                                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Value Text
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              selectedDate != null ? formattedDate : hintText,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: selectedDate != null ? AppColors.black : AppColors.grey.withOpacity(0),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

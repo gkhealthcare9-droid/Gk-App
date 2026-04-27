@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sales_grow/Controllers/AddCustomer/Customer_controller.dart';
+import '../Widgets/CustomAppBar.dart';
 import 'package:get/get.dart';
 import '../../Models/Customer/Customer.dart';
 import '../Widgets/CustomTextField.dart';
@@ -111,13 +113,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        leading: CustomBackButton(onTap: () => Get.back()),
-        title: Text(isEditing ? 'MODIFY CUSTOMER PROFILE' : 'NEW CUSTOMER REGISTRATION', 
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+      appBar: CustomAppBar(
+        title: isEditing ? 'Edit Customer' : 'Add Customer',
       ),
       body: Obx(() {
         if (_customerController.isLoading.value) {
@@ -133,119 +130,65 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader('General Information', Icons.business_rounded),
-                    _buildResponsiveLayout(
-                      isDesktop: isDesktop,
-                      children: [
-                        CustomTextField(
-                          label: 'Corporate Identity',
-                          hintText: 'Enter company / clinic name',
-                          controller: companyController,
-                          icon: Icons.business_rounded,
-                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-                        ),
-                        CustomTextField(
-                          label: 'Lead Contact Name',
-                          hintText: 'Enter primary representative',
-                          controller: nameController,
-                          icon: Icons.person_rounded,
-                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-                        ),
-                        CustomTextField(
-                          label: 'Official Email',
-                          hintText: 'communications@customer.com',
-                          controller: emailController,
-                          icon: Icons.email_rounded,
-                        ),
-                        CustomTextField(
-                          label: 'Taxation ID (GSTIN)',
-                          hintText: 'Business registration ID',
-                          controller: gstinController,
-                          icon: Icons.badge_rounded,
-                        ),
-                      ],
+                    _buildSectionHeader('Customer Information', Icons.person_add_rounded),
+                    CustomTextField(
+                      label: 'Customer Name',
+                      hintText: 'Enter customer name',
+                      controller: nameController,
+                      icon: Icons.person_rounded,
+                      isRequired: true,
+                      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader('Connectivity Details', Icons.contact_phone_rounded),
-                    _buildResponsiveLayout(
-                      isDesktop: isDesktop,
-                      children: [
-                        CustomTextField(
-                          label: 'Mobile Connectivity',
-                          hintText: 'Enter 10-digit number',
-                          controller: phoneController,
-                          icon: Icons.call_rounded,
-                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-                        ),
-                        CustomTextField(
-                          label: 'Alternative Contact',
-                          hintText: 'Secondary number (Optional)',
-                          controller: phoneController2,
-                          icon: Icons.call_merge_rounded,
-                        ),
-                      ],
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      label: 'Phone',
+                      hintText: 'Enter phone number',
+                      controller: phoneController,
+                      icon: Icons.call_rounded,
+                      isRequired: true,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Required';
+                        if (v.length != 10) return 'Must be 10 digits';
+                        return null;
+                      },
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
                     ),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader('Operational HQ & Zonal Data', Icons.location_on_rounded),
-                    _buildResponsiveLayout(
-                      isDesktop: isDesktop,
-                      children: [
-                        CustomTextField(
-                          label: 'Operational Address',
-                          hintText: 'Building, floor, locality',
-                          controller: billingAddress1Controller,
-                          icon: Icons.location_on_rounded,
-                        ),
-                        CustomSearchableDropDown<dynamic>(
-                          label: 'Zonal State',
-                          hintText: 'Select India State',
-                          items: _locationController.states,
-                          itemAsString: (s) => s['name'],
-                          selectedItem: selectedState,
-                          prefixIcon: Icons.map_rounded,
-                          isRequired: true,
-                          onChanged: (val) {
-                            setState(() {
-                              selectedState = val;
-                              selectedCity = null;
-                              billingStateController.text = val?['name'] ?? '';
-                              billingCityController.text = '';
-                            });
-                            if (val != null) {
-                              _locationController.fetchCitiesByState(val['id']);
-                            }
-                          },
-                        ),
-                        Obx(() => CustomSearchableDropDown<dynamic>(
-                          label: 'Operational City',
-                          hintText: selectedState == null ? 'Select State First' : 'Search City',
-                          items: _locationController.filteredCities.toList(),
-                          itemAsString: (c) => c['name'],
-                          selectedItem: selectedCity,
-                          prefixIcon: Icons.location_city_rounded,
-                          isRequired: true,
-                          showAddButton: selectedState != null,
-                          onAddPressed: () => _showAddCityDialog(),
-                          onChanged: (val) {
-                            setState(() {
-                              selectedCity = val;
-                              billingCityController.text = val?['name'] ?? '';
-                            });
-                          },
-                        )),
-                        CustomTextField(
-                          label: 'Postal Pincode',
-                          hintText: 'Enter region code',
-                          controller: billingPincodeController,
-                          icon: Icons.pin_drop_rounded,
-                        ),
-                      ],
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      label: 'Email',
+                      hintText: 'Enter email address',
+                      controller: emailController,
+                      icon: Icons.email_rounded,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      label: 'Hospital Name',
+                      hintText: 'Enter hospital / clinic name',
+                      controller: companyController,
+                      icon: Icons.local_hospital_rounded,
+                      isRequired: true,
+                      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      label: 'GSTIN',
+                      hintText: 'Enter GST number',
+                      controller: gstinController,
+                      icon: Icons.badge_rounded,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      label: 'Address',
+                      hintText: 'Enter full address',
+                      controller: billingAddress1Controller,
+                      icon: Icons.location_on_rounded,
                     ),
                     const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       child: CustomButton(
-                        buttonText: isEditing ? 'UPDATE PARTNERSHIP' : 'ENROLL CUSTOMER',
+                        buttonText: isEditing ? 'UPDATE CUSTOMER' : 'ADD CUSTOMER',
                         onTap: _submitForm,
                       ),
                     ),
@@ -314,8 +257,20 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   void _submitForm() {
     if (!_formKey.currentState!.validate()) {
-      CustomAlert.error("Please verify all mandatory corporate fields.");
+      CustomAlert.error("Please verify all mandatory corporate fields correctly.");
       return;
+    }
+
+    final phone2 = phoneController2.text.trim();
+    if (phone2.isNotEmpty) {
+       if (phone2.length != 10) {
+        CustomAlert.error("Alternative contact must be 10 digits.");
+        return;
+      }
+      if (!RegExp(r'^[6-9]').hasMatch(phone2)) {
+        CustomAlert.error("Alternative contact must start with 6, 7, 8, or 9.");
+        return;
+      }
     }
 
     final customer = AddCustomerModel(

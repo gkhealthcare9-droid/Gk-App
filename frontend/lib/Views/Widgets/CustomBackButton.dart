@@ -32,6 +32,7 @@ class _CustomBackButtonState extends State<CustomBackButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: widget.onTap,
+      behavior: HitTestBehavior.opaque,
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,

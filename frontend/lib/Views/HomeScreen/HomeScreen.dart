@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../Utils/Responsive.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../Utils/Colors.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
 import '../../Controllers/Dashboard/Dashboard_controller.dart';
@@ -16,12 +15,13 @@ import '../Expenses/expenses.dart';
 import '../Vendor/AddVendor.dart';
 import '../Vendor/VendorList.dart';
 import '../Widgets/CustomLazyLoader.dart';
-import '../../Services/AuthServices/Auth_Services.dart';
-import '../../Models/Auth/User_Model.dart';
+import '../../Services/AuthServices/SecureStorageService.dart';
 import 'ReportScreen.dart';
 import 'ViewReportScreen.dart';
 import '../EmployeeManagement/EmployeeList.dart';
 import '../Classification/CategoryList.dart';
+import '../Geography/StateList.dart';
+import '../Geography/CityList.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,36 +37,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Get.put<CustomerController>(CustomerController(), permanent: true);
-    Get.put<DashboardController>(DashboardController(), permanent: true);
-    _loadUserType();
+    _loadUserInfo();
   }
 
-  Future<void> _loadUserType() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? localName = prefs.getString('userName');
-    String type = prefs.getString('userType') ?? 'User';
-    String? token = prefs.getString('authToken');
+  Future<void> _loadUserInfo() async {
+    final name = await SecureStorageService.getUserName();
+    final type = await SecureStorageService.getUserType() ?? 'User';
 
-    setState(() {
-      userName = localName ?? 'Admin';
-      userType = type[0].toUpperCase() + type.substring(1).toLowerCase();
-    });
-
-    if (localName == null && token != null) {
-      try {
-        final UserModel profileData = await LoginService().fetchProfile(token);
-        if (profileData.name != null) {
-          await prefs.setString('userName', profileData.name!);
-          if (mounted) {
-            setState(() {
-              userName = profileData.name;
-            });
-          }
-        }
-      } catch (e) {
-        print('Error refreshing profile: $e');
-      }
+    if (mounted) {
+      setState(() {
+        userName = name ?? 'Admin';
+        userType = type[0].toUpperCase() + type.substring(1).toLowerCase();
+      });
     }
   }
 
@@ -138,42 +120,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   delegate: SliverChildListDelegate([
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Customers: ${stats['customers'] ?? 0}', 'Management', Icons.people_alt_rounded, AppColors.accentBlue, () => Get.to(() => CustomersList()), 200);
+                      return _buildModernCard('Total Customers: ${stats['customers'] ?? 0}', 'Management', Icons.people_alt_rounded, AppColors.accentBlue, () => Get.to(() => const CustomersList())?.then((_) => Get.find<DashboardController>().fetchStats()), 200);
                     }),
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Vendors: ${stats['vendors'] ?? 0}', 'Supply Chain', Icons.storefront_rounded, Colors.teal, () => Get.to(() => VendorsListScreen()), 300);
+                      return _buildModernCard('Total Vendors: ${stats['vendors'] ?? 0}', 'Supply Chain', Icons.storefront_rounded, Colors.teal, () => Get.to(() => VendorsListScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 300);
                     }),
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Employees: ${stats['employees'] ?? 0}', 'Staffing', Icons.badge_rounded, Colors.indigo, () => Get.to(() => const EmployeesListScreen()), 400);
+                      return _buildModernCard('Total Staff: ${stats['employees'] ?? 0}', 'Staffing', Icons.badge_rounded, Colors.indigo, () => Get.to(() => const EmployeesListScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 400);
                     }),
-                    _buildModernCard('Onboarding', 'Add Customer', Icons.person_add_rounded, Colors.orange, () => Get.to(() => AddCustomerScreen()), 500),
-                    _buildModernCard('Procurement', 'Add Vendor', Icons.add_home_work_rounded, Colors.deepPurple, () => Get.to(() => AddVendorScreen()), 600),
-                    _buildModernCard('Analytics', 'Gen. Reports', Icons.assignment_rounded, Colors.indigo, () => Get.to(() => ReportScreen()), 700),
-                    _buildModernCard('Archive', 'View Reports', Icons.analytics_rounded, Colors.pinkAccent, () => Get.to(() => ViewReportScreen()), 800),
+                    _buildModernCard('Onboarding', 'Add Customer', Icons.person_add_rounded, Colors.orange, () => Get.to(() => AddCustomerScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 500),
+                    _buildModernCard('Procurement', 'Add Vendor', Icons.add_home_work_rounded, Colors.deepPurple, () => Get.to(() => AddVendorScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 600),
+                    _buildModernCard('Analytics', 'Gen. Reports', Icons.assignment_rounded, Colors.indigo, () => Get.to(() => const ReportScreen()), 700),
+                    _buildModernCard('Archive', 'View Reports', Icons.analytics_rounded, Colors.pinkAccent, () => Get.to(() => const ViewReportScreen()), 800),
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Products: ${stats['products'] ?? 0}', 'Inventory', Icons.inventory_2_rounded, Colors.blueGrey, () => Get.to(() => ProductForm()), 900);
+                      return _buildModernCard('Total Products: ${stats['products'] ?? 0}', 'Inventory', Icons.inventory_2_rounded, Colors.blueGrey, () => Get.to(() => ProductForm())?.then((_) => Get.find<DashboardController>().fetchStats()), 900);
                     }),
-                    _buildModernCard('Finance', 'Manage Expenses', Icons.account_balance_wallet_rounded, Colors.green, () => Get.to(() => ExpenseScreen()), 1000),
-                    _buildModernCard('Database', 'All Products', Icons.view_list_rounded, Colors.redAccent, () => Get.to(() => ViewProducts()), 1100),
+                    _buildModernCard('Finance', 'Manage Expenses', Icons.account_balance_wallet_rounded, Colors.green, () => Get.to(() => const ExpenseScreen()), 1000),
+                    _buildModernCard('Database', 'All Products', Icons.view_list_rounded, Colors.redAccent, () => Get.to(() => const ViewProducts()), 1100),
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
                       final totalOutstanding = stats['totalOutstanding'] ?? 0;
-                      return _buildModernCard('Outstanding: ₹$totalOutstanding', 'Payments', Icons.insights_rounded, AppColors.secondaryBlue, () => Get.to(() => OutstandingAllScreen()), 1200);
+                      return _buildModernCard('Outstanding: ₹$totalOutstanding', 'Payments', Icons.insights_rounded, AppColors.secondaryBlue, () => Get.to(() => const OutstandingAllScreen()), 1200);
                     }),
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Leads: ${stats['leads'] ?? 0}', 'Sales', Icons.add_location_alt_rounded, Colors.brown, () => Get.to(() => AddLeadScreen()), 1300);
+                      return _buildModernCard('Total Leads: ${stats['leads'] ?? 0}', 'Sales', Icons.add_location_alt_rounded, Colors.brown, () => Get.to(() => const AddLeadScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 1300);
                     }),
-                    _buildModernCard('Marketing', 'All Leads', Icons.map_rounded, Colors.cyan, () => Get.to(() => LeadsScreen()), 1400),
-                    
-                    // New Sections
+                    _buildModernCard('Marketing', 'All Leads', Icons.map_rounded, Colors.cyan, () => Get.to(() => const LeadsScreen()), 1400),
                     Obx(() {
                       final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Categories: ${stats['categories'] ?? 0}', 'Classification', Icons.category_rounded, Colors.amber, () => Get.to(() => const CategoryListScreen()), 1500);
+                      return _buildModernCard('Total Categories: ${stats['categories'] ?? 0}', 'Classification', Icons.category_rounded, Colors.amber, () => Get.to(() => const CategoryListScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 1500);
                     }),
+                    _buildModernCard('Geography', 'States', Icons.map_rounded, Colors.indigoAccent, () => Get.to(() => const StateListScreen()), 1600),
+                    _buildModernCard('Geography', 'Cities', Icons.location_city_rounded, Colors.blueGrey, () => Get.to(() => const CityListScreen()), 1700),
                   ]),
                 ),
               ),

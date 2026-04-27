@@ -42,86 +42,150 @@ router.post('/excel', auth, upload.single('file'), async (req, res) => {
     }
 
     let importedCount = 0;
+    const errors = [];
 
-    for (const row of data) {
-      // Create a case-insensitive key lookup helper
-      const getVal = (patterns) => {
-        const keys = Object.keys(row);
-        for (const pattern of patterns) {
-          const match = keys.find(k => k.toLowerCase().trim() === pattern.toLowerCase());
-          if (match) return row[match];
-        }
-        return null;
-      };
-
-      const customerName = getVal(['Customer Name', 'Name', 'Customer']);
-      if (!customerName) {
-        console.warn('Skipping row - missing Customer Name');
-        continue;
+    const generateSafeUniqueNumber = async () => {
+      const prefix = 'GK-';
+      let uniqueNumber;
+      let exists = true;
+      let attempts = 0;
+      
+      while (exists && attempts < 20) {
+        uniqueNumber = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+        const found = await Customer.findOne({ where: { customerQuniqueNumber: uniqueNumber } });
+        if (!found) exists = false;
+        attempts++;
       }
+      return uniqueNumber;
+    };
 
-      console.log('Processing customer:', customerName);
-
-      // Upsert Customer
-      let [customer, created] = await Customer.findOrCreate({
-        where: { customerName },
-        defaults: {
-          addressOne: getVal(['Customer / Buyer Address', 'Address', 'Address 1']),
-          city: getVal(['City']),
-          state: getVal(['State', 'Province']),
-          customerQuniqueNumber: 'GK' + Date.now().toString().slice(-6) + Math.floor(100+Math.random()*900)
-        }
-      });
-
-      console.log(created ? 'Created new customer' : 'Found existing customer');
-
-      // Handle Outstanding
-      const oAmount = getVal(['Total Outstanding', 'Outstanding', 'Balance']);
-      const outstandingAmount = Number(oAmount) || 0;
-      if (outstandingAmount > 0) {
-        console.log('Adding outstanding:', outstandingAmount);
-        await CustomerOutstanding.findOrCreate({
-          where: { customerId: customer.id },
-          defaults: {
-            initialDue: outstandingAmount,
-            currentDue: outstandingAmount
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      try {
+        // Create a case-insensitive key lookup helper
+        const getVal = (patterns) => {
+          const keys = Object.keys(row);
+          for (const pattern of patterns) {
+            const match = keys.find(k => k.toLowerCase().replace(/[\s\-_]/g, '') === pattern.toLowerCase().replace(/[\s\-_]/g, ''));
+            if (match) return String(row[match]).trim();
           }
-        });
-      }
+          return null;
+        };
 
-      // Create Task/Follow-up
-      const purpose = getVal(['Purpose of Visit', 'Purpose']);
-      const statusValue = getVal(['Status']);
+        const customerName = getVal(['Customer Name', 'Name', 'Customer', 'Hospital', 'Hospital Name']);
+        if (!customerName) {
+          console.warn(`Skipping row ${i + 1} - missing Customer Name`);
+          errors.push({ row: i + 1, error: 'Missing Customer Name' });
+          continue;
+        }
 
-      if (purpose || statusValue) {
-        console.log('Creating task for visit:', purpose);
-        await Task.create({
-          taskNumber: Math.floor(100000 + Math.random() * 900000),
-          taskCategory: purpose || 'Follow-up',
-          taskName: `Excel Import: ${customerName}`,
-          taskDescription: `
-Pymt flw up by: ${getVal(['Pymt flw up by', 'Follow up by']) || 'N/A'}
-MOP: ${getVal(['MOP']) || 'N/A'}
+        console.log(`Processing row ${i + 1}: ${customerName}`);
+
+        const customerPhone = getVal(['Customer Phone', 'Phone', 'Mobile', 'Phone 1', 'customerPhone', 'Contact']);
+        let uniqueId = getVal(['Unique ID', 'Customer ID', 'customerQuniqueNumber', 'ID', 'Serial No', 'S.No']);
+
+        // Check for existing customer ONLY by Unique ID to allow duplicate names
+        let existingCustomer = null;
+        if (uniqueId) {
+          existingCustomer = await Customer.findOne({ where: { customerQuniqueNumber: uniqueId } });
+        }
+
+        let customer, created;
+        if (existingCustomer) {
+          customer = existingCustomer;
+          created = false;
+        } else {
+          // If no unique ID found (or provided), generate a new one and create a new record
+          if (!uniqueId) uniqueId = await generateSafeUniqueNumber();
+          customer = await Customer.create({
+            customerName,
+            customerPhone,
+            customerPhone2: getVal(['Phone 2', 'Secondary Phone', 'customerPhone2']),
+            customerEmail: getVal(['Customer Email', 'Email', 'customerEmail']),
+            customerGSTIN: getVal(['GSTIN', 'GST Number', 'customerGSTIN', 'GST']),
+            customerCompany: getVal(['Customer Company', 'Company', 'customerCompany', 'Institution']),
+            addressOne: getVal(['Address 1', 'Address One', 'customerAddress1', 'addressOne', 'Address']),
+            addressTwo: getVal(['Address 2', 'Address Two', 'customerAddress2', 'addressTwo']),
+            city: getVal(['City', 'customerCity', 'Location']),
+            state: getVal(['State', 'customerState', 'Province']),
+            pincode: getVal(['Pincode', 'Zip Code', 'customerPincode', 'Zip']),
+            customerQuniqueNumber: uniqueId
+          });
+          created = true;
+        }
+
+        console.log(created ? 'Created new customer' : 'Found existing customer (merging)');
+
+        // Update if existing to ensure all data is synced
+        if (!created) {
+          await customer.update({
+            customerPhone: customerPhone || customer.customerPhone,
+            customerPhone2: getVal(['Phone 2', 'Secondary Phone', 'customerPhone2']) || customer.customerPhone2,
+            customerEmail: getVal(['Customer Email', 'Email', 'customerEmail']) || customer.customerEmail,
+            customerGSTIN: getVal(['GSTIN', 'GST Number', 'customerGSTIN', 'GST']) || customer.customerGSTIN,
+            customerCompany: getVal(['Customer Company', 'Company', 'customerCompany', 'Institution']) || customer.customerCompany,
+            addressOne: getVal(['Address 1', 'Address One', 'customerAddress1', 'addressOne', 'Address']) || customer.addressOne,
+            addressTwo: getVal(['Address 2', 'Address Two', 'customerAddress2', 'addressTwo']) || customer.addressTwo,
+            city: getVal(['City', 'customerCity', 'Location']) || customer.city,
+            state: getVal(['State', 'customerState', 'Province']) || customer.state,
+            pincode: getVal(['Pincode', 'Zip Code', 'customerPincode', 'Zip']) || customer.pincode,
+          });
+        }
+
+        // Handle Outstanding
+        const oAmount = getVal(['Total Outstanding', 'Outstanding', 'Balance', 'Initial Due', 'Due']);
+        const outstandingAmount = Number(oAmount) || 0;
+        if (outstandingAmount > 0) {
+          const [out, outCreated] = await CustomerOutstanding.findOrCreate({
+            where: { customerId: customer.id },
+            defaults: {
+              initialDue: outstandingAmount,
+              currentDue: outstandingAmount
+            }
+          });
+          if (!outCreated) {
+            await out.update({ currentDue: outstandingAmount });
+          }
+        }
+
+        // Create Task/Follow-up (Optional if columns exist)
+        const purpose = getVal(['Purpose of Visit', 'Purpose', 'Task Category', 'Category']);
+        const statusValue = getVal(['Status', 'Task Status']);
+
+        if (purpose || statusValue) {
+          await Task.create({
+            taskNumber: Math.floor(100000 + Math.random() * 900000),
+            taskCategory: purpose || 'Follow-up',
+            taskName: `Excel Import: ${customerName}`,
+            taskDescription: `
+Pymt flw up by: ${getVal(['Pymt flw up by', 'Follow up by', 'Staff']) || 'N/A'}
+MOP: ${getVal(['MOP', 'Payment Method']) || 'N/A'}
 Supply: ${getVal(['Supply']) || 'N/A'}
-Remarks: ${getVal(['Remarks']) || 'N/A'}
+Remarks: ${getVal(['Remarks', 'Notes']) || 'N/A'}
 Distributor: ${getVal(['Distributor']) || 'N/A'}
-Mounesh Remarks March: ${getVal(['Mounesh Remarks March']) || 'N/A'}
-Priority Task: ${getVal(['Priority Task', 'Priority']) || 'N/A'}
-          `.trim(),
-          taskStatus: statusValue === 'Completed' ? 'Completed' : 'Pending',
-          assignedToId: req.user.id,
-          dueDate: new Date(),
-          priority: getVal(['Priority Task', 'Priority']) === 'High' ? 'High' : 'Medium'
-        });
+            `.trim(),
+            taskStatus: statusValue === 'Completed' ? 'Completed' : 'Pending',
+            assignedToId: req.user.id,
+            dueDate: new Date(),
+            priority: getVal(['Priority']) === 'High' ? 'High' : 'Medium'
+          });
+        }
+        importedCount++;
+      } catch (rowError) {
+        console.error(`Error on row ${i + 1}:`, rowError);
+        errors.push({ row: i + 1, error: rowError.message });
       }
-      importedCount++;
     }
 
     fs.unlinkSync(filePath);
-    console.log('Import successful. Count:', importedCount);
-    res.json({ message: `Successfully imported ${importedCount} records`, count: importedCount });
+    console.log('Import finished. Count:', importedCount, 'Errors:', errors.length);
+    res.json({ 
+      message: `Successfully imported ${importedCount} records`, 
+      count: importedCount, 
+      errors: errors.length > 0 ? errors : undefined 
+    });
   } catch (err) {
-    console.error('Import Error:', err);
+    console.error('Core Import Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

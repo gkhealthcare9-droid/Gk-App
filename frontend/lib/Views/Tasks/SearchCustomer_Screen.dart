@@ -5,6 +5,7 @@ import 'package:sales_grow/Models/Customer/Customer.dart';
 import 'package:sales_grow/Utils/Colors.dart';
 import 'package:sales_grow/Views/Customer/CustomerView.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:get/get.dart';
 
 class SearchCustomer extends StatefulWidget {
@@ -27,7 +28,7 @@ class _SearchCustomerState extends State<SearchCustomer> {
     try {
       _customerController = Get.find<CustomerController>();
     } catch (e) {
-      Get.snackbar('Error', 'CustomerController not found. Please try again.');
+      CustomAlert.error('CustomerController not found. Please try again.');
       Get.back();
       return;
     }
@@ -128,14 +129,7 @@ class _SearchCustomerState extends State<SearchCustomer> {
               icon: Icon(Icons.copy, size: 20, color: Colors.grey[600]),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: copyText));
-                Get.snackbar(
-                  'Copied',
-                  '$label copied to clipboard',
-                  colorText: Colors.white,
-                  backgroundColor: Colors.blueAccent,
-                  snackPosition: SnackPosition.BOTTOM,
-                  duration: Duration(seconds: 2),
-                );
+                CustomAlert.success('$label copied to clipboard');
               },
             ),
         ],

@@ -4,7 +4,10 @@ import 'package:get/get.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
 import '../../Controllers/Product/Product.dart';
 import '../../Models/product/getproduct_model.dart';
+import '../Widgets/CustomAppBar.dart';
+import '../../Utils/Colors.dart';
 import '../ReportDesign/quotationView.dart';
+import '../Widgets/CustomAlert.dart';
 
 class _Constants {
   static const taxOptions = ['GST (5%)', 'IGST (18%)'];
@@ -251,30 +254,18 @@ class _AddQuotationScreenState extends State<AddQuotationScreen> {
       };
       for (var entry in fields.entries) {
         if (entry.value.isEmpty) {
-          Get.snackbar(
-            'Error',
-            'Product ${i + 1}: ${entry.key} is required',
-            backgroundColor: Colors.redAccent,
-          );
+          CustomAlert.error('Product ${i + 1}: ${entry.key} is required');
           return;
         }
       }
       final rate = double.tryParse(p['rate']!.text);
       final quantity = double.tryParse(p['quantity']!.text);
       if (rate == null) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Invalid rate',
-          backgroundColor: Colors.redAccent,
-        );
+        CustomAlert.error('Product ${i + 1}: Invalid rate');
         return;
       }
       if (quantity == null || quantity <= 0) {
-        Get.snackbar(
-          'Error',
-          'Product ${i + 1}: Quantity must be > 0',
-          backgroundColor: Colors.redAccent,
-        );
+        CustomAlert.error('Product ${i + 1}: Quantity must be > 0');
         return;
       }
     }
@@ -288,11 +279,7 @@ class _AddQuotationScreenState extends State<AddQuotationScreen> {
     };
     for (var entry in requiredFields.entries) {
       if (entry.value.text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          '${entry.key} is required',
-          backgroundColor: Colors.redAccent,
-        );
+        CustomAlert.error('${entry.key} is required');
         return;
       }
     }
@@ -305,11 +292,7 @@ class _AddQuotationScreenState extends State<AddQuotationScreen> {
     };
     for (var entry in customFields.entries) {
       if (entry.value.text.isEmpty) {
-        Get.snackbar(
-          'Error',
-          '${entry.key} is required',
-          backgroundColor: Colors.redAccent,
-        );
+        CustomAlert.error('${entry.key} is required');
         return;
       }
     }
@@ -388,18 +371,10 @@ class _AddQuotationScreenState extends State<AddQuotationScreen> {
         termsAndConditions: terms,
         bankDetails: _Constants.bankDetails[_selectedBank]!,
       );
-      Get.snackbar(
-        'Success',
-        'Quotation generated successfully',
-        backgroundColor: Colors.green,
-      );
+      CustomAlert.success('Quotation generated successfully');
       _clearForm();
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to generate quotation: $e',
-        backgroundColor: Colors.redAccent,
-      );
+      CustomAlert.error('Failed to generate quotation: $e');
     } finally {
       setState(() => _isGenerating = false);
     }
@@ -761,23 +736,11 @@ class _AddQuotationScreenState extends State<AddQuotationScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.grey[100],
-    appBar: AppBar(
-      title: const Text('Create Quotation'),
-      backgroundColor: _Constants.primaryColor,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_Constants.primaryColor, Color(0xFF42A5F5)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-      ),
+    appBar: CustomAppBar(
+      title: 'Create Quotation',
       actions: [
         IconButton(
-          icon: const Icon(Icons.clear_all),
+          icon: const Icon(Icons.clear_all, color: AppColors.primaryBlue),
           tooltip: 'Clear Form',
           onPressed: _clearForm,
         ),
@@ -1064,20 +1027,8 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Select Products - ${widget.category}'),
-        backgroundColor: _Constants.primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_Constants.primaryColor, Color(0xFF42A5F5)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: 'Select Products - ${widget.category}',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -1174,11 +1125,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                                 final qty =
                                     double.tryParse(quantityCtrl.text) ?? 1.0;
                                 if (qty <= 0) {
-                                  Get.snackbar(
-                                    'Error',
-                                    'Quantity must be > 0',
-                                    backgroundColor: Colors.redAccent,
-                                  );
+                                  CustomAlert.error('Quantity must be > 0');
                                   return;
                                 }
                                 _addToSelected(product, qty.toString());

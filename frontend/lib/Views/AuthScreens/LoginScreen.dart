@@ -168,32 +168,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: double.infinity,
                               child: CustomButton(
                                 onTap: () {
-                                  // Trigger native Flutter 'Required' validation
+                                  // Trigger form validation
                                   if (!_formKey.currentState!.validate()) {
-                                    CustomAlert.error("Please fill in all required fields.");
                                     return;
                                   }
 
                                   final email = _emailController.text.trim();
                                   final password = _passwordController.text;
 
-                                  // STRICT EMAIL VALIDATION (Regex)
-                                  final emailRegex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+                                  // Secondary logic checks (Email Regex & Password Length)
+                                  final emailRegex = RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
                                   
-                                  if (email.isEmpty) {
-                                    CustomAlert.error("Please enter your email identification.");
-                                    return;
-                                  }
                                   
                                   if (!emailRegex.hasMatch(email)) {
                                     CustomAlert.error("Please enter a valid email format (e.g. user@example.com).");
                                     return;
                                   }
 
-                                  if (password.isEmpty) {
-                                    CustomAlert.error("Please enter your password.");
-                                    return;
-                                  }
 
                                   if (password.length < 6) {
                                     CustomAlert.error("Security requirement: Password must be at least 6 characters.");

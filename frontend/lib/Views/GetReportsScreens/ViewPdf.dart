@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 
 class PDFViewerScreen extends StatefulWidget {
@@ -51,9 +52,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('PDF shared successfully')),
-          );
+          CustomAlert.success('PDF shared successfully');
         }
       } else {
         _showErrorDialog('Failed to download PDF');
@@ -129,9 +128,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
               );
             },
             onDocumentLoaded: (details) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PDF loaded successfully')),
-              );
+              // CustomAlert.success('PDF loaded successfully');
             },
           ),
           if (_isLoading)

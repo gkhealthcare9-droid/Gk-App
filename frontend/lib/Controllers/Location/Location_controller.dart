@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../Utils/Appconstants.dart';
+import 'package:sales_grow/Services/Geography/Location_services.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 
 class LocationController extends GetxController {
+  final LocationService _locationService = LocationService();
+  
   var states = [].obs;
   var cities = [].obs;
   var filteredCities = [].obs;
@@ -19,21 +19,12 @@ class LocationController extends GetxController {
   Future<void> fetchStates() async {
     try {
       isLoading(true);
-      final prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      final response = await http.get(
-        Uri.parse(AppConstants.BASE_URL + AppConstants.LOCATION + '/states'),
-        headers: {
-          'Authorization': 'Bearer ${token ?? ''}',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        states.value = json.decode(response.body);
+      final fetchedStates = await _locationService.fetchStates();
+      if (fetchedStates != null) {
+        states.value = fetchedStates.map((e) => e.toJson()).toList();
       }
     } catch (e) {
-      print('Error fetching states: $e');
+      CustomAlert.error('Error fetching states: $e');
     } finally {
       isLoading(false);
     }
@@ -42,65 +33,104 @@ class LocationController extends GetxController {
   Future<void> fetchCitiesByState(int stateId) async {
     try {
       isLoading(true);
-      final prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      final response = await http.get(
-        Uri.parse(AppConstants.BASE_URL + AppConstants.LOCATION + '/cities/by-state/$stateId'),
-        headers: {
-          'Authorization': 'Bearer ${token ?? ''}',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        filteredCities.value = json.decode(response.body);
+      final fetchedCities = await _locationService.fetchCitiesByState(stateId);
+      if (fetchedCities != null) {
+        filteredCities.value = fetchedCities.map((e) => e.toJson()).toList();
       }
     } catch (e) {
-      print('Error fetching filtered cities: $e');
+      CustomAlert.error('Error fetching cities: $e');
     } finally {
       isLoading(false);
     }
   }
 
-  Future<void> addCity(String name, int stateId) async {
+  Future<void> addState(String name) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      final response = await http.post(
-        Uri.parse(AppConstants.BASE_URL + AppConstants.LOCATION + '/cities/add'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token ?? ''}',
-        },
-        body: json.encode({
-          'name': name,
-          'stateId': stateId,
-        }),
-      );
-
-      if (response.statusCode == 201) {
-        // Refresh the cities list for this state
-        await fetchCitiesByState(stateId);
+      final response = await _locationService.addState(name);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        await fetchStates();
+      } else {
+        CustomAlert.error('Failed to add state');
       }
     } catch (e) {
-      print('Error adding city: $e');
+      CustomAlert.error('Error adding state: $e');
+    }
+  }
+
+  Future<void> updateState(int id, String name) async {
+    try {
+      final response = await _locationService.updateState(id, name);
+      if (response.statusCode == 200) {
+        await fetchStates();
+      } else {
+        CustomAlert.error('Failed to update state');
+      }
+    } catch (e) {
+      CustomAlert.error('Error updating state: $e');
+    }
+  }
+
+  Future<void> deleteState(int id) async {
+    try {
+      final response = await _locationService.deleteState(id);
+      if (response.statusCode == 200) {
+        await fetchStates();
+      } else {
+        CustomAlert.error('Failed to delete state');
+      }
+    } catch (e) {
+      CustomAlert.error('Error deleting state: $e');
+    }
+  }
+
+  Future<void> addCity(String name, int stateId) async {
+    try {
+      final response = await _locationService.addCity(name, stateId);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        await fetchCitiesByState(stateId);
+      } else {
+        CustomAlert.error('Failed to add city');
+      }
+    } catch (e) {
+      CustomAlert.error('Error adding city: $e');
+    }
+  }
+
+  Future<void> updateCity(int id, String name, int stateId) async {
+    try {
+      final response = await _locationService.updateCity(id, name, stateId);
+      if (response.statusCode == 200) {
+        await fetchCitiesByState(stateId);
+      } else {
+        CustomAlert.error('Failed to update city');
+      }
+    } catch (e) {
+      CustomAlert.error('Error updating city: $e');
+    }
+  }
+
+  Future<void> deleteCity(int id, int stateId) async {
+    try {
+      final response = await _locationService.deleteCity(id);
+      if (response.statusCode == 200) {
+        await fetchCitiesByState(stateId);
+      } else {
+        CustomAlert.error('Failed to delete city');
+      }
+    } catch (e) {
+      CustomAlert.error('Error deleting city: $e');
     }
   }
 
   Future<void> fetchCities() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-      final response = await http.get(
-        Uri.parse(AppConstants.BASE_URL + AppConstants.LOCATION + '/cities'),
-        headers: {'Authorization': 'Bearer ${token ?? ''}'},
-      );
-      if (response.statusCode == 200) {
-        cities.value = json.decode(response.body);
+      final fetchedCities = await _locationService.fetchCities();
+      if (fetchedCities != null) {
+        cities.value = fetchedCities.map((e) => e.toJson()).toList();
       }
     } catch (e) {
-      print('Error fetching cities: $e');
+      CustomAlert.error('Error fetching cities: $e');
     }
   }
 }

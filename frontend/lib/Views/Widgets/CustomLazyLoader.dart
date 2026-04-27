@@ -31,28 +31,31 @@ class _CustomLazyLoaderState extends State<CustomLazyLoader> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return RotationTransition(
-      turns: _controller,
+    return Container(
+      color: Colors.white.withOpacity(0.5), // Semi-transparent overlay
       child: Center(
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: SweepGradient(
-              colors: [
-                (widget.color ?? AppColors.primaryBlue).withOpacity(0.1),
-                (widget.color ?? AppColors.primaryBlue),
-              ],
-              stops: const [0.0, 1.0],
+        child: RotationTransition(
+          turns: _controller,
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: SweepGradient(
+                colors: [
+                  (widget.color ?? AppColors.primaryBlue).withOpacity(0.1),
+                  (widget.color ?? AppColors.primaryBlue),
+                ],
+                stops: const [0.0, 1.0],
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ),

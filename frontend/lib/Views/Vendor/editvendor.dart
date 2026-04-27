@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sales_grow/Controllers/AddVendor/vendor_controller.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 
 import '../../Models/Vendor/Vendor.dart';
 import '../Widgets/CustomButton.dart';
@@ -218,25 +219,25 @@ class _EditvendorScreenState extends State<EditvendorScreen> {
                   final pincode = billingPincodeController.text.trim();
 
                   if (name.isEmpty) {
-                    Get.snackbar('Error', 'Name is required');
+                    CustomAlert.error('Name is required');
                   } else if (phone.isEmpty) {
-                    Get.snackbar('Error', 'Phone number is required');
+                    CustomAlert.error('Phone number is required');
                   } else if (email.isEmpty) {
-                    Get.snackbar('Error', 'Email is required');
+                    CustomAlert.error('Email is required');
                     // } else if (gstin.isEmpty) {
-                    //   Get.snackbar('Error', 'GSTIN is required');
+                    //   CustomAlert.error('GSTIN is required');
                   } else if (company.isEmpty) {
-                    Get.snackbar('Error', 'Company name is required');
+                    CustomAlert.error('Company name is required');
                   } else if (address1.isEmpty) {
-                    Get.snackbar('Error', 'Address Line 1 is required');
+                    CustomAlert.error('Address Line 1 is required');
                   } else if (address2.isEmpty) {
-                    Get.snackbar('Error', 'Address Line 2 is required');
+                    CustomAlert.error('Address Line 2 is required');
                   } else if (city.isEmpty) {
-                    Get.snackbar('Error', 'City is required');
+                    CustomAlert.error('City is required');
                   } else if (state.isEmpty) {
-                    Get.snackbar('Error', 'State is required');
+                    CustomAlert.error('State is required');
                   } else if (pincode.isEmpty) {
-                    Get.snackbar('Error', 'Pincode is required');
+                    CustomAlert.error('Pincode is required');
                   } else {
                     // Create customer model
                     final vendor = AddVendorModel(

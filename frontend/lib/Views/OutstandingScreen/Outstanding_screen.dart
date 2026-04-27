@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../Utils/Colors.dart';
+import '../Widgets/CustomAppBar.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
 import 'DetailedCustomerOutstanding.dart';
 
@@ -22,11 +24,11 @@ class _OutstandingAllScreenState extends State<OutstandingAllScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('All Customer Outstandings'),
+      appBar: CustomAppBar(
+        title: 'All Customer Outstandings',
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, color: AppColors.primaryBlue),
             onPressed: () {
               showDialog(
                 context: context,
@@ -38,7 +40,7 @@ class _OutstandingAllScreenState extends State<OutstandingAllScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: AppColors.primaryBlue),
             onPressed: () => _controller.fetchalloutstanding(),
           ),
         ],

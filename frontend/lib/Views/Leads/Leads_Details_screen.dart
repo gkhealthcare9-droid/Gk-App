@@ -7,10 +7,40 @@ import 'All_Leads_Screen.dart';
 
 import 'EditLeadScreen.dart';
 
-class LeadDetailScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../Models/Leads/Leads_Model.dart';
+import 'All_Leads_Screen.dart';
+
+import 'EditLeadScreen.dart';
+
+class LeadDetailScreen extends StatefulWidget {
   final LeadModel lead;
 
   const LeadDetailScreen({super.key, required this.lead});
+
+  @override
+  State<LeadDetailScreen> createState() => _LeadDetailScreenState();
+}
+
+class _LeadDetailScreenState extends State<LeadDetailScreen> {
+  String _userType = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserType();
+  }
+
+  Future<void> _loadUserType() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userType = prefs.getString('userType') ?? '';
+    });
+  }
 
   // Helper method to build info rows with icons
   Widget _buildInfoRow(IconData icon, String label, String? value) {
@@ -51,27 +81,27 @@ class LeadDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          lead.name ?? 'Lead Details',
+          widget.lead.name ?? 'Lead Details',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.black87),
-            onPressed: () async {
-              final result = await Get.to(() => EditLeadScreen(lead: lead));
-              if (result == true) {
-                // ⬅️ Refresh the screen manually
-                Get.off(() => LeadsScreen()); // Rebuilds screen with same lead
-                // OR if you have leadController.fetchLeads() available, call that and update UI
-              }
-            },
-          ),
+          if (_userType == 'admin')
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.black87),
+              onPressed: () async {
+                final result = await Get.to(() => EditLeadScreen(lead: widget.lead));
+                if (result == true) {
+                  // ⬅️ Refresh the screen manually
+                  Get.off(() => LeadsScreen()); // Rebuilds screen with same lead
+                  // OR if you have leadController.fetchLeads() available, call that and update UI
+                }
+              },
+            ),
         ],
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -97,37 +127,37 @@ class LeadDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _buildInfoRow(Icons.person_outline, 'Name', lead.name),
-                      _buildInfoRow(Icons.email_outlined, 'Email', lead.email),
-                      _buildInfoRow(Icons.phone_outlined, 'Phone', lead.phone),
+                      _buildInfoRow(Icons.person_outline, 'Name', widget.lead.name),
+                      _buildInfoRow(Icons.email_outlined, 'Email', widget.lead.email),
+                      _buildInfoRow(Icons.phone_outlined, 'Phone', widget.lead.phone),
                       _buildInfoRow(
                         Icons.work_outline,
                         'Position',
-                        lead.position,
+                        widget.lead.position,
                       ),
                       _buildInfoRow(
                         Icons.business_outlined,
                         'Company',
-                        lead.company,
+                        widget.lead.company,
                       ),
                       _buildInfoRow(
                         Icons.description_outlined,
                         'Description',
-                        lead.description,
+                        widget.lead.description,
                       ),
-                      _buildInfoRow(Icons.source, 'Source', lead.source),
-                      _buildInfoRow(Icons.category, 'Lead Type', lead.leadType),
+                      _buildInfoRow(Icons.source, 'Source', widget.lead.source),
+                      _buildInfoRow(Icons.category, 'Lead Type', widget.lead.leadType),
                       _buildInfoRow(
                         Icons.attach_money,
                         'Lead Value',
-                        lead.leadValue?.toString(),
+                        widget.lead.leadValue?.toString(),
                       ),
                       _buildInfoRow(
                         Icons.person_add,
                         'Assigned To',
-                        lead.assigned?.name,
+                        widget.lead.assigned?.name,
                       ),
-                      _buildInfoRow(Icons.info_outline, 'Status', lead.status),
+                      _buildInfoRow(Icons.info_outline, 'Status', widget.lead.status),
                     ],
                   ),
                 ),
@@ -152,11 +182,11 @@ class LeadDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _buildInfoRow(Icons.location_on, 'Address', lead.address),
-                      _buildInfoRow(Icons.location_city, 'City', lead.city),
-                      _buildInfoRow(Icons.map, 'State', lead.state),
-                      _buildInfoRow(Icons.flag, 'Country', lead.country),
-                      _buildInfoRow(Icons.pin, 'Pincode', lead.pincode),
+                      _buildInfoRow(Icons.location_on, 'Address', widget.lead.address),
+                      _buildInfoRow(Icons.location_city, 'City', widget.lead.city),
+                      _buildInfoRow(Icons.map, 'State', widget.lead.state),
+                      _buildInfoRow(Icons.flag, 'Country', widget.lead.country),
+                      _buildInfoRow(Icons.pin, 'Pincode', widget.lead.pincode),
                     ],
                   ),
                 ),
@@ -184,19 +214,12 @@ class LeadDetailScreen extends StatelessWidget {
                       _buildInfoRow(
                         Icons.create,
                         'Created At',
-                        lead.createdAt != null
+                        widget.lead.createdAt != null
                             ? DateFormat.yMMMd().add_jm().format(
-                              lead.createdAt!.toLocal(),
+                              widget.lead.createdAt!.toLocal(),
                             )
                             : 'N/A',
                       ),
-                      // _buildInfoRow(
-                      //   Icons.update,
-                      //   'Updated At',
-                      //   lead.updatedAt != null
-                      //       ? DateFormat.yMMMd().add_jm().format(lead.updatedAt!.toLocal())
-                      //       : 'N/A',
-                      // ),
                     ],
                   ),
                 ),

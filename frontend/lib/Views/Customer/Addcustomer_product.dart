@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
+import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import '../../Controllers/Product/Product.dart'; // Adjust path as needed
 
 class AddCustomerProductScreen extends StatefulWidget {
@@ -51,33 +53,23 @@ class _AddCustomerProductScreenState extends State<AddCustomerProductScreen> {
 
   void _saveAndReturn() async {
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a product category.'), backgroundColor: Colors.redAccent),
-      );
+      CustomAlert.error('Please select a product category.');
       return;
     }
     if (_selectedManufacturerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a manufacturer.'), backgroundColor: Colors.redAccent),
-      );
+      CustomAlert.error('Please select a manufacturer.');
       return;
     }
     if (_serialNumberController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a serial number.'), backgroundColor: Colors.redAccent),
-      );
+      CustomAlert.error('Please enter a serial number.');
       return;
     }
     if (_installationDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please pick an installation date.'), backgroundColor: Colors.redAccent),
-      );
+      CustomAlert.error('Please pick an installation date.');
       return;
     }
     if (_warrantyDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please pick a warranty end date.'), backgroundColor: Colors.redAccent),
-      );
+      CustomAlert.error('Please pick a warranty end date.');
       return;
     }
 
@@ -91,10 +83,6 @@ class _AddCustomerProductScreenState extends State<AddCustomerProductScreen> {
       amcStart: null,
       amcEnd: null,
     );
-
-    if (!_controller.isLoading.value) {
-      Get.back();
-    }
   }
 
   @override
@@ -119,11 +107,8 @@ class _AddCustomerProductScreenState extends State<AddCustomerProductScreen> {
     final warrantyDateText = formatDate(_warrantyDate);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Customer Product'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: 'Add Customer Product',
       ),
       body: Obx(() {
         return Stack(
@@ -150,7 +135,6 @@ class _AddCustomerProductScreenState extends State<AddCustomerProductScreen> {
                     }).toList(),
                     onChanged: (val) {
                       setState(() {
-                        print('//////////////////////////VAL $val');
                         _selectedCategoryId = val;
                         if (val == null) {
                           _selectedManufacturerId = null;

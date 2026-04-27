@@ -5,8 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:sales_grow/Controllers/AuthController/ProfileController.dart';
 import 'package:sales_grow/Controllers/Task/Task_Controller.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
+import 'package:sales_grow/Models/CustomerContact/CustomerContactModel.dart';
 import 'package:sales_grow/Views/Tasks/Serach_Customer_product.dart';
-import 'SearchCustomer_Screen.dart';
+import 'package:sales_grow/Views/Widgets/CustomSearchableDropDown.dart';
+import '../../Controllers/AddCustomer/Customer_controller.dart';
+import '../Widgets/CustomAlert.dart';
 
 class CreateTaskScreen extends StatefulWidget {
   const CreateTaskScreen({super.key});
@@ -19,6 +22,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
     with SingleTickerProviderStateMixin {
   final ProfileController _profileController = Get.put(ProfileController());
   final TaskController _taskController = Get.put(TaskController());
+  final CustomerController _customerController = Get.put(CustomerController());
   final _formKey = GlobalKey<FormState>();
   final _descCtrl = TextEditingController();
   final _title = TextEditingController();
@@ -28,6 +32,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
   String? _priority;
   String? _assignedId;
   CustomerModel? _selectedCustomer;
+  GetCustomerContactModel? _selectedEmployee; 
   late AnimationController _animationController;
   late Animation<double> _buttonScaleAnimation;
 
@@ -36,14 +41,13 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
     );
     _buttonScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    Future.delayed(Duration.zero, () async {
-      _profileController.fetchUsers();
-    });
+    // Removed Future.delayed to rely on Controller's onInit for faster data availability
+    _profileController.fetchUsers();
   }
 
   final _taskTypes = [
@@ -58,6 +62,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
     'Message',
     'Leads',
     'Courier',
+    'Other'
   ];
   final _priorities = ['Low', 'Medium', 'High'];
 
@@ -75,17 +80,18 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
     final picked = await showDatePicker(
       context: context,
       initialDate: _dueDate ?? now,
-      firstDate: DateTime(now.year - 1),
+      firstDate: now,
       lastDate: DateTime(now.year + 5),
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: Colors.blueAccent,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black,
-            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+            ), 
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -105,24 +111,26 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
         _assignedId == null ||
         _title.text.isEmpty ||
         _priority == null ||
-        _dueDate == null) {
-      Get.snackbar(
-        'Error',
-        'Please fill all required fields',
-        colorText: Colors.white,
-        backgroundColor: Colors.redAccent,
-        snackPosition: SnackPosition.BOTTOM,
-        icon: Icon(Icons.error, color: Colors.white),
-      );
+        _dueDate == null ||
+        _selectedCustomer == null) {
+      CustomAlert.error('Please fill all required fields');
       return;
     }
+    
+    // Append approach person to description if selected
+    String finalDesc = _descCtrl.text;
+    if (_selectedEmployee != null) {
+      finalDesc = "Approach to: ${_selectedEmployee!.name}\n\n$finalDesc";
+    }
+
     _taskController.createTask(
       _taskType!,
       _title.text,
-      _descCtrl.text,
+      finalDesc,
       _assignedId!,
       formatDateToYMD(_dueDate),
       _priority!,
+      _selectedCustomer!.id,
     );
   }
 
@@ -134,7 +142,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
       fillColor: Colors.white.withOpacity(0.9),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.blueAccent, width: 1.5),
+        borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -145,21 +153,14 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+        borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
       ),
-      prefixIcon: Icon(Icons.edit, color: Colors.blueAccent),
+      prefixIcon: const Icon(Icons.edit, color: Colors.blueAccent),
     );
   }
 
-  Future<void> _searchCustomer() async {
-    final result = await Get.to(() => SearchCustomer());
-    if (result is CustomerModel) {
-      setState(() => _selectedCustomer = result);
-    }
-  }
-
   Future<void> _searchProduct() async {
-    final result = await Get.to(() => SearchProducts());
+    final result = await Get.to(() => const SearchProducts());
     if (result is String) {
       setState(() => _productCtrl.text = result);
     }
@@ -177,18 +178,15 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
       child: ScaleTransition(
         scale: _buttonScaleAnimation,
         child: Container(
+          width: MediaQuery.of(context).size.width * 0.90,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.purpleAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Colors.blue,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 color: Colors.blueAccent.withOpacity(0.3),
                 blurRadius: 8,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -204,7 +202,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
               ),
             ),
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
@@ -299,27 +297,53 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
                               ),
                             ),
                             SizedBox(height: 16),
-                            _buildGradientButton(
-                              onPressed: _searchCustomer,
-                              label: 'Search Customer',
-                              icon: Icons.search,
-                            ),
+                            Obx(() {
+                              if (_customerController.isLoading.value) {
+                                return Center(child: LinearProgressIndicator());
+                              }
+                              return CustomSearchableDropDown<CustomerModel>(
+                                label: 'Customer',
+                                items: _customerController.customers,
+                                itemAsString: (c) {
+                                  if (c.customerCompany != null && c.customerCompany!.isNotEmpty) return c.customerCompany!;
+                                  if (c.customerName != null && c.customerName!.isNotEmpty) return c.customerName!;
+                                  return c.customerQuniqueNumber ?? 'Unnamed';
+                                },
+                                selectedItem: _selectedCustomer,
+                                prefixIcon: Icons.business,
+                                hintText: 'Select or Search Customer',
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedCustomer = val;
+                                    _selectedEmployee = null; // Reset employee on customer change
+                                  });
+                                    if (val != null) {
+                                      _customerController.fetchCustomerContacts(val.id!);
+                                    }
+                                },
+                              );
+                            }),
                             SizedBox(height: 16),
-                            if (_selectedCustomer != null)
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Selected: ${_selectedCustomer!.customerName}',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.blueAccent,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
+                            // 👈 NEW: Approach To Dropdown
+                            Obx(() {
+                              // Access length to ensure Obx registers the dependency
+                              final employeeCount = _customerController.employees.length;
+                              
+                              return CustomSearchableDropDown<GetCustomerContactModel>(
+                                label: 'Approach To',
+                                items: _customerController.hospitalContacts,
+                                itemAsString: (e) => e.name ?? 'No Name',
+                                selectedItem: _selectedEmployee,
+                                prefixIcon: Icons.person_search,
+                                hintText: _selectedCustomer == null 
+                                    ? 'Select Customer First' 
+                                    : (employeeCount == 0 ? 'No contacts found' : 'Select Contact Person'),
+                                onChanged: (val) {
+                                  setState(() => _selectedEmployee = val);
+                                },
+                                enabled: _selectedCustomer != null && employeeCount > 0,
+                              );
+                            }),
                             if (_taskType == 'Supply' ||
                                 _taskType == 'Courier') ...[
                               SizedBox(height: 16),
@@ -388,7 +412,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen>
                                 items:
                                     _profileController.users.map((user) {
                                       return DropdownMenuItem(
-                                        value: user.id,
+                                        value: user.id.toString(), // Ensure string conversion
                                         child: Text(
                                           user.name,
                                           style: GoogleFonts.poppins(),

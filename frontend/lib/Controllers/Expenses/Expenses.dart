@@ -1,8 +1,9 @@
 import 'dart:io' as io;
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:get/get.dart';
 import 'package:sales_grow/Models/Expenses/expenses_model.dart';
 import 'package:sales_grow/Services/Expenses/expenses_services.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 
 class ExpensesController extends GetxController {
   var isLoading = false.obs;
@@ -38,10 +39,10 @@ var expensescategory = <ExpensesCategoryModel>[].obs;
         print("Debig 6");
 
       } else {
-        Get.snackbar('Error', 'No wallet data found');
+        CustomAlert.error('No wallet data found');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
@@ -55,10 +56,10 @@ var expensescategory = <ExpensesCategoryModel>[].obs;
       if (fetched != null) {
         transcations.assignAll(fetched); // ✅ This now works
       } else {
-        Get.snackbar("Error", "No category data found");
+        CustomAlert.error("No transaction data found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch categories: $e");
+      CustomAlert.error("Failed to fetch transactions: $e");
     } finally {
       isLoading.value = false;
     }
@@ -72,10 +73,10 @@ var expensescategory = <ExpensesCategoryModel>[].obs;
       if (fetched != null) {
         expensescategory.assignAll(fetched); // ✅ This now works
       } else {
-        Get.snackbar("Error", "No category data found");
+        CustomAlert.error("No transaction data found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch categories: $e");
+      CustomAlert.error("Failed to fetch transactions: $e");
     } finally {
       isLoading.value = false;
     }
@@ -101,13 +102,16 @@ var expensescategory = <ExpensesCategoryModel>[].obs;
       );
 
       if (success) {
-        Get.snackbar('Success', 'Expense added successfully');
+        CustomAlert.success('Expense added successfully');
         await fetchWallet(); // 🔁 Refresh wallet
+        Future.delayed(const Duration(seconds: 2), () {
+          Get.back();
+        });
       } else {
-        Get.snackbar('Error', 'Failed to add expense');
+        CustomAlert.error('Failed to add expense');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Something went wrong: $e');
+      CustomAlert.error('Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }

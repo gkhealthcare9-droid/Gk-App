@@ -4,6 +4,7 @@ import '../../Controllers/Product/Product.dart';
 import '../../Models/product/getproduct_model.dart';
 import '../../Models/product/product_category_model.dart';
 import '../../Utils/Colors.dart';
+import '../Widgets/CustomAlert.dart';
 
 class EditProductScreen extends StatefulWidget {
   final GetProductModel product;
@@ -49,7 +50,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         rateController.text.isEmpty ||
         selectedCategory == null) {
       print("❌ Validation failed — missing required fields");
-      Get.snackbar("Error", "Please fill in all required fields");
+      CustomAlert.error("Please fill in all required fields");
       return;
     }
 
@@ -65,7 +66,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
 
     if (success) {
-      Get.snackbar("Success", "Product updated successfully");
+      CustomAlert.success("Product updated successfully");
+      await Future.delayed(const Duration(seconds: 2));
       Navigator.pop(
         context,
         GetProductModel(
@@ -81,7 +83,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
       );
     } else {
-      Get.snackbar("Failed", "Could not update product");
+      CustomAlert.error("Could not update product");
       print("jishad ==== ");
     }
   }
@@ -89,7 +91,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Product'), centerTitle: true),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primaryBlue, size: 20),
+          onPressed: () => Get.back(),
+        ),
+        title: const Text('Edit Product'),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

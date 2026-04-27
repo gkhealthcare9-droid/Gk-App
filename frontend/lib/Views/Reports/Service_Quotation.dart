@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 import 'package:sales_grow/Controllers/AddCustomer/Customer_controller.dart';
 import '../../Controllers/Product/Product.dart';
 import '../../Models/product/getproduct_model.dart';
+import '../Widgets/CustomAlert.dart';
 import '../ReportDesign/quotationView.dart';
+import '../Widgets/CustomAppBar.dart';
 
 class ServiceQuotationScreen extends StatefulWidget {
   final String reportNumber;
@@ -29,8 +31,8 @@ class _ServiceQuotationScreenState extends State<ServiceQuotationScreen> {
   String _selectedTax = 'IGST (18%)';
   final List<String> _taxOptions = ['GST (5%)', 'IGST (18%)'];
   bool _isGenerating = false;
-  final ProductController _productController = Get.put(ProductController());
-  final CustomerController _customerController = Get.put(CustomerController());
+  final ProductController _productController = Get.find<ProductController>();
+  final CustomerController _customerController = Get.find<CustomerController>();
 
   // Terms & Conditions state variables
   String _selectedPayment = '40% Advance';
@@ -62,10 +64,11 @@ class _ServiceQuotationScreenState extends State<ServiceQuotationScreen> {
   void initState() {
     super.initState();
     _addProduct();
-    Future.delayed(Duration.zero, () async {
-      await _productController.fetchProducts();
-      await fetchHospital(widget.customerCode);
-    });
+    // Cache check to avoid redundant fetches
+    if (_productController.products.isEmpty) {
+      _productController.fetchProducts();
+    }
+    fetchHospital(widget.customerCode);
   }
 
   Future<void> fetchHospital(String unique) async {
@@ -153,73 +156,73 @@ class _ServiceQuotationScreenState extends State<ServiceQuotationScreen> {
     for (var i = 0; i < _products.length; i++) {
       final product = _products[i];
       if (product['name']!.text.isEmpty) {
-        Get.snackbar("Error", "Product ${i + 1}: Name is required", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: Name is required");
         return;
       }
       if (product['hsn']!.text.isEmpty) {
-        Get.snackbar("Error", "Product ${i + 1}: HSN Code is required", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: HSN Code is required");
         return;
       }
       if (product['rate']!.text.isEmpty) {
-        Get.snackbar("Error", "Product ${i + 1}: Rate is required", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: Rate is required");
         return;
       }
       if (product['description']!.text.isEmpty) {
-        Get.snackbar("Error", "Product ${i + 1}: Description is required", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: Description is required");
         return;
       }
       if (product['quantity']!.text.isEmpty) {
-        Get.snackbar("Error", "Product ${i + 1}: Quantity is required", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: Quantity is required");
         return;
       }
       final double? rate = double.tryParse(product['rate']!.text);
       final double? quantity = double.tryParse(product['quantity']!.text);
       if (rate == null) {
-        Get.snackbar("Error", "Product ${i + 1}: Invalid rate", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: Invalid rate");
         return;
       }
       if (quantity == null || quantity <= 0) {
-        Get.snackbar("Error", "Product ${i + 1}: Quantity must be greater than 0", backgroundColor: Colors.redAccent);
+        CustomAlert.showError(context: context, message: "Product ${i + 1}: Quantity must be greater than 0");
         return;
       }
     }
 
     if (_buyerNameCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Buyer Name is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Buyer Name is required");
       return;
     }
     if (_buyerAddressCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Buyer Address is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Buyer Address is required");
       return;
     }
     if (_buyerGSTCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Buyer GSTIN/UIN is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Buyer GSTIN/UIN is required");
       return;
     }
     if (_buyerStateCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Buyer State Name is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Buyer State Name is required");
       return;
     }
     if (_quotationNumberCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Quotation Number is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Quotation Number is required");
       return;
     }
 
     // Validate custom fields in Terms & Conditions
     if (_selectedPayment == 'Custom' && _customPaymentCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Custom Payment value is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Custom Payment value is required");
       return;
     }
     if (_selectedDelivery == 'Custom' && _customDeliveryCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Custom Delivery value is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Custom Delivery value is required");
       return;
     }
     if (_selectedValidity == 'Custom' && _customValidityCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Custom Validity value is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Custom Validity value is required");
       return;
     }
     if (_selectedWarranty == 'Custom' && _customWarrantyCtrl.text.isEmpty) {
-      Get.snackbar("Error", "Custom Warranty value is required", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Custom Warranty value is required");
       return;
     }
 
@@ -290,10 +293,11 @@ class _ServiceQuotationScreenState extends State<ServiceQuotationScreen> {
         buyerContact: widget.phoneNumber ?? '', // add this line
 
       );
-      Get.snackbar("Success", "Quotation generated successfully", backgroundColor: Colors.green);
+      CustomAlert.showSuccess(context: context, message: "Quotation generated successfully");
+      await Future.delayed(const Duration(seconds: 2));
       _clearForm();
     } catch (e) {
-      Get.snackbar("Error", "Failed to generate quotation: $e", backgroundColor: Colors.redAccent);
+      CustomAlert.showError(context: context, message: "Failed to generate quotation: $e");
     } finally {
       setState(() => _isGenerating = false);
     }
@@ -705,20 +709,8 @@ class _ServiceQuotationScreenState extends State<ServiceQuotationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Create Quotation"),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+      appBar: CustomAppBar(
+        title: "Create Quotation",
         actions: [
           IconButton(
             icon: const Icon(Icons.clear_all),
@@ -738,14 +730,15 @@ class _ServiceQuotationScreenState extends State<ServiceQuotationScreen> {
         child: ListView(
           children: [
             _sectionHeader("Product Details", Icons.inventory),
-            Obx(() {
-              if (_productController.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              return Column(
-                children: _products.asMap().entries.map((entry) => _productEntry(entry.key)).toList(),
-              );
-            }),
+          Obx(() {
+            final products = _productController.products;
+            if (_productController.isLoading.value && products.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return Column(
+              children: _products.asMap().entries.map((entry) => _productEntry(entry.key)).toList(),
+            );
+          }),
             const SizedBox(height: 20),
             _sectionHeader("Buyer Details", Icons.person),
             _customTextField(

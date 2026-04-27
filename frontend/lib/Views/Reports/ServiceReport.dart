@@ -14,7 +14,9 @@ import 'package:sales_grow/Controllers/Report/Report_controller.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:signature/signature.dart';
+import '../../Utils/Colors.dart';
 import 'package:sales_grow/Models/product/customer_product.dart';
 import 'package:sales_grow/Views/ReportDesign/ServiceReportView.dart';
 import 'package:sales_grow/Views/Widgets/CustomButton.dart';
@@ -373,8 +375,7 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
 
   Future<void> _generatePdf() async {
     if (_hospitalName.text.isEmpty || _slNumberController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
+      CustomAlert.error(
         'Please fill in hospital details and serial number',
       );
       return;
@@ -382,7 +383,7 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
 
     try {
       final pdfBytes = await _generateAndSavePdf();
-      
+
       if (kIsWeb) {
         await Printing.layoutPdf(
           onLayout: (PdfPageFormat format) async => pdfBytes,
@@ -392,19 +393,17 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
         final tempDir = await getTemporaryDirectory();
         final tempFile = io.File('${tempDir.path}/service_report.pdf');
         await tempFile.writeAsBytes(pdfBytes);
-        
+
         await Printing.layoutPdf(
           onLayout: (PdfPageFormat format) async => pdfBytes,
           name: 'service_report.pdf',
         );
       }
 
-      Get.snackbar(
-        'Success',
+      CustomAlert.success(
         'PDF generated successfully',
-        backgroundColor: Colors.white,
-        icon: const Icon(Icons.verified, color: Colors.green),
       );
+      await Future.delayed(const Duration(seconds: 2));
       Get.to(
         () => ServiceQuotationScreen(
           customerCode: _uniqueCode.text,
@@ -413,14 +412,13 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
         ),
       );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to generate PDF: $e');
+      CustomAlert.error('Failed to generate PDF: $e');
     }
   }
 
   Future<void> _saveAndProceed() async {
     if (_hospitalName.text.isEmpty || _slNumberController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
+      CustomAlert.error(
         'Please fill in hospital details and serial number',
       );
       return;
@@ -428,12 +426,10 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
 
     try {
       await _generateAndSavePdf();
-      Get.snackbar(
-        'Success',
+      CustomAlert.success(
         'PDF generated and saved successfully',
-        backgroundColor: Colors.white,
-        icon: const Icon(Icons.verified, color: Colors.green),
       );
+      await Future.delayed(const Duration(seconds: 2));
       Get.to(
         () => ServiceQuotationScreen(
           customerCode: _uniqueCode.text,
@@ -442,7 +438,7 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
         ),
       );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to generate PDF: $e');
+      CustomAlert.error('Failed to generate PDF: $e');
     }
   }
 
@@ -822,7 +818,7 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
           title: 'Service Report',
           actions: [
             IconButton(
-              icon: const Icon(Icons.clear_all),
+              icon: const Icon(Icons.clear_all, color: AppColors.primaryBlue),
               tooltip: 'Clear Form',
               onPressed: _clearForm,
             ),
@@ -1263,8 +1259,7 @@ class _ServiceRepotScreenState extends State<ServiceRepotScreen> {
                                       _currentQuantity = null;
                                     });
                                   } else {
-                                    Get.snackbar(
-                                      'Error',
+                                    CustomAlert.error(
                                       'Please select a spare part and quantity',
                                     );
                                   }

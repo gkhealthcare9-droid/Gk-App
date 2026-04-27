@@ -19,9 +19,10 @@ import 'package:sales_grow/Views/Widgets/CustomSigntaure.dart';
 import 'package:signature/signature.dart';
 import '../HomeScreen/ReportScreen.dart';
 import '../ReportDesign/InstallationReportView.dart';
-import '../../Models/Employee/AddEmployee_model.dart';
+import '../../Models/CustomerContact/CustomerContactModel.dart';
 import '../../Models/product/product_category_model.dart';
 import '../../Utils/Colors.dart';
+import '../Widgets/CustomAlert.dart';
 
 class InstallationReport extends StatefulWidget {
   const InstallationReport({super.key});
@@ -121,7 +122,7 @@ class _InstallationReportState extends State<InstallationReport> {
       _isCustomerDataLoaded.value = true;
     } catch (e) {
       _isCustomerDataLoaded.value = false;
-      Get.snackbar('Error', 'Failed to fetch customers: $e');
+      CustomAlert.error('Failed to fetch customers: $e');
     }
   }
 
@@ -256,7 +257,7 @@ class _InstallationReportState extends State<InstallationReport> {
                   setState(() {});
                   Navigator.of(context).pop();
                 } else {
-                  Get.snackbar('Error', 'Please select an employee');
+                  CustomAlert.error('Please select an employee');
                 }
               },
               child: Text("Done"),
@@ -711,51 +712,51 @@ class _InstallationReportState extends State<InstallationReport> {
   Future<void> _sendReport() async {
     await _reportController.fetchInstallationReports();
     if (_hospitalName.text.isEmpty) {
-      Get.snackbar('Validation Error', 'Hospital name is required');
+      CustomAlert.error('Hospital name is required', title: 'Validation Error');
       return;
     }
     if (_slNumberController.text.isEmpty) {
-      Get.snackbar('Validation Error', 'Serial number is required');
+      CustomAlert.error('Serial number is required', title: 'Validation Error');
       return;
     }
     if (_signedByController.text.isEmpty) {
-      Get.snackbar(
-        'Validation Error',
+      CustomAlert.error(
         'Client signature (Signed By) is required',
+        title: 'Validation Error',
       );
       return;
     }
     if (selected == 'others' && _othercontroller.text.isEmpty) {
-      Get.snackbar('Validation Error', 'Please specify the machine status');
+      CustomAlert.error('Please specify the machine status', title: 'Validation Error');
       return;
     }
     if (selectedCategory == null || selectedCategory!.isEmpty) {
-      Get.snackbar('Validation Error', 'Please select a product category');
+      CustomAlert.error('Please select a product category', title: 'Validation Error');
       return;
     }
     if (selectedManufacturer == null || selectedManufacturer!.isEmpty) {
-      Get.snackbar('Validation Error', 'Please select a manufacturer');
+      CustomAlert.error('Please select a manufacturer', title: 'Validation Error');
       return;
     }
     if (_actiontaken.text.isEmpty) {
-      Get.snackbar('Validation Error', 'Please select action taken');
+      CustomAlert.error('Please select action taken', title: 'Validation Error');
       return;
     }
     if (warrantyEndDate == null) {
-      Get.snackbar('Validation Error', 'Please select warranty end date');
+      CustomAlert.error('Please select warranty end date', title: 'Validation Error');
       return;
     }
     if (selectedEmployees.isEmpty) {
-      Get.snackbar(
-        'Validation Error',
+      CustomAlert.error(
         'Please select at least one trained employee',
+        title: 'Validation Error',
       );
       return;
     }
 
     final signatureBytes = await _controller.toPngBytes();
     if (signatureBytes == null) {
-      Get.snackbar('Validation Error', 'Signature not captured properly');
+      CustomAlert.error('Signature not captured properly', title: 'Validation Error');
       return;
     }
 
@@ -811,7 +812,7 @@ class _InstallationReportState extends State<InstallationReport> {
         _customerController.employees
             .firstWhere(
               (e) => e.id == id,
-          orElse: () => GetEmployeeModel(),
+          orElse: () => GetCustomerContactModel(),
         )
             .name ??
             '',
@@ -853,10 +854,9 @@ class _InstallationReportState extends State<InstallationReport> {
 
     try {
       await _reportController.addInstallation(newReport);
-      Get.snackbar('Success', 'Installation report submitted successfully');
-      Get.to(() => ReportScreen());
+      // Success alert is handled in Controller with delay and navigation
     } catch (e) {
-      Get.snackbar('Error', 'Failed to submit report: $e');
+      CustomAlert.error('Failed to submit report: $e');
     }
   }
 
@@ -1387,7 +1387,7 @@ class _InstallationReportState extends State<InstallationReport> {
                                             final selectedEmployee = _customerController.employees
                                                 .firstWhere(
                                                   (e) => e.id == val,
-                                              orElse: () => GetEmployeeModel(),
+                                              orElse: () => GetCustomerContactModel(),
                                             );
                                             _customerController.selectedEngineerName.value =
                                                 selectedEmployee.name ?? '';
@@ -1403,7 +1403,7 @@ class _InstallationReportState extends State<InstallationReport> {
                                       final employee = _customerController.employees
                                           .firstWhere(
                                             (e) => e.id == empId,
-                                        orElse: () => GetEmployeeModel(),
+                                        orElse: () => GetCustomerContactModel(),
                                       );
                                       return Chip(
                                         label: Text(

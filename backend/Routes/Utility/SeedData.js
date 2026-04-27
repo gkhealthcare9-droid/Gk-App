@@ -48,4 +48,23 @@ router.post('/india', async (req, res) => {
   }
 });
 
+const ContactPositionModel = require('../../Models/CustomerContact/ContactPosition');
+
+router.post('/positions', async (req, res) => {
+  try {
+    const positions = [
+      'Technician', 'Doctor', 'Nephrologist', 'Bio Medical',
+      'Purchase', 'Stores', 'Admin', 'Accounts'
+    ];
+
+    for (const p of positions) {
+      await ContactPositionModel.findOrCreate({ where: { position: p } });
+    }
+
+    res.status(200).json({ message: 'Contact positions seeded successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Seeding failed', error: error.message });
+  }
+});
+
 module.exports = router;

@@ -8,13 +8,33 @@ class AssignedTo {
   factory AssignedTo.fromJson(Map<String, dynamic> json) {
     return AssignedTo(
       id: (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))?.toString() ?? '',
-      name: json['name'] as String ?? "",
-      email: json['email'] as String,
+      name: json['name'] as String? ?? "",
+      email: json['email'] as String? ?? "",
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'_id': id, 'name': name, 'email': email};
+    return {'id': id, 'name': name, 'email': email};
+  }
+}
+
+class TaskCustomer {
+  final String id;
+  final String? customerCompany;
+  final String? customerName;
+
+  TaskCustomer({required this.id, this.customerCompany, this.customerName});
+
+  factory TaskCustomer.fromJson(Map<String, dynamic> json) {
+    return TaskCustomer(
+      id: (json['id'] ?? json['_id'])?.toString() ?? '',
+      customerCompany: json['customerCompany'] as String?,
+      customerName: json['customerName'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'customerCompany': customerCompany, 'customerName': customerName};
   }
 }
 
@@ -25,7 +45,8 @@ class Task {
   final String taskName;
   final String taskDescription;
   final String taskStatus;
-  final AssignedTo assignedTo;
+  final AssignedTo? assignedTo;
+  final TaskCustomer? customer;
   final DateTime dueDate;
   final String priority;
   final DateTime createdAt;
@@ -38,7 +59,8 @@ class Task {
     required this.taskName,
     required this.taskDescription,
     required this.taskStatus,
-    required this.assignedTo,
+    this.assignedTo,
+    this.customer,
     required this.dueDate,
     required this.priority,
     required this.createdAt,
@@ -48,30 +70,34 @@ class Task {
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       id: (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))?.toString() ?? '',
-      taskNumber: json['taskNumber'] as int,
-      taskCategory: json['taskCategory'] as String,
-      taskName: json['taskName'] as String,
-      taskDescription: json['taskDescription'] as String,
-      taskStatus: json['taskStatus'] as String,
-      assignedTo: AssignedTo.fromJson(
-        json['assignedTo'] as Map<String, dynamic>,
-      ),
-      dueDate: DateTime.parse(json['dueDate'] as String),
-      priority: json['priority'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      taskNumber: json['taskNumber'] is int ? json['taskNumber'] : int.tryParse(json['taskNumber']?.toString() ?? '0') ?? 0,
+      taskCategory: json['taskCategory']?.toString() ?? '',
+      taskName: json['taskName']?.toString() ?? '',
+      taskDescription: json['taskDescription']?.toString() ?? '',
+      taskStatus: json['taskStatus']?.toString() ?? '',
+      assignedTo: json['assignedTo'] != null && json['assignedTo'] is Map<String, dynamic>
+          ? AssignedTo.fromJson(json['assignedTo'] as Map<String, dynamic>)
+          : null,
+      customer: json['Customer'] != null && json['Customer'] is Map<String, dynamic>
+          ? TaskCustomer.fromJson(json['Customer'] as Map<String, dynamic>)
+          : null,
+      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : DateTime.now(),
+      priority: json['priority']?.toString() ?? 'Medium',
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
+      'id': id,
       'taskNumber': taskNumber,
       'taskCategory': taskCategory,
       'taskName': taskName,
       'taskDescription': taskDescription,
       'taskStatus': taskStatus,
-      'assignedTo': assignedTo.toJson(),
+      'assignedTo': assignedTo?.toJson(),
+      'customer': customer?.toJson(),
       'dueDate': dueDate.toIso8601String(),
       'priority': priority,
       'createdAt': createdAt.toIso8601String(),

@@ -45,11 +45,25 @@ router.post('/add', userAuth, async (req, res) => {
 router.get('/', userAuth, async (req, res) => {
   try {
     const employees = await Employee.findAll({
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      include: [{ model: EmployeeCategory }]
     });
     res.json(employees);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching employees', error: err.message });
+  }
+});
+
+// Get employees by customer
+router.get('/by-customer/:id', userAuth, async (req, res) => {
+  try {
+    const employees = await Employee.findAll({
+      where: { customerId: req.params.id },
+      include: [{ model: EmployeeCategory }]
+    });
+    res.json(employees);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching employees by customer', error: err.message });
   }
 });
 

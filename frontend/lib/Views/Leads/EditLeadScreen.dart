@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../Widgets/CustomAlert.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
 import '../../Controllers/AuthController/ProfileController.dart';
 import '../../Controllers/Leads/Leads_Controller.dart';
 import '../../Models/Leads/Leads_Model.dart';
+import '../Widgets/CustomAppBar.dart';
 import 'All_Leads_Screen.dart';
 
 class EditLeadScreen extends StatefulWidget {
@@ -183,9 +185,11 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
         updatedLead,
       );
       if (success) {
+        CustomAlert.success('Lead updated successfully');
+        await Future.delayed(const Duration(seconds: 2));
         Get.off(() => const LeadsScreen());
       } else {
-        Get.snackbar('Error', 'Update failed');
+        CustomAlert.error('Update failed');
       }
     }
   }
@@ -336,21 +340,8 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Lead'),
-        centerTitle: true,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.lightBlue, size: 15),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ),
-        backgroundColor: Colors.lightBlue.shade100,
+      appBar: const CustomAppBar(
+        title: 'Edit Lead',
       ),
       body: Obx(() {
         return _leadController.isLoading.value
@@ -461,7 +452,7 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                                 ) {
                                   return DropdownMenuItem<String>(
                                     value: category.id,
-                                    child: Text(category.category ?? 'Unnamed'),
+                                    child: Text(category.position ?? 'Unnamed'),
                                   );
                                 }).toList(),
                             onChanged:

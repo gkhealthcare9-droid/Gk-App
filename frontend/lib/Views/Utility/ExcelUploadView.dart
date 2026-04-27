@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Utils/Appconstants.dart';
 import '../../Utils/Colors.dart';
@@ -19,9 +20,23 @@ class ExcelUploadScreen extends StatefulWidget {
 class _ExcelUploadScreenState extends State<ExcelUploadScreen> {
   PlatformFile? _selectedFile;
   bool _isUploading = false;
+  String _userType = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserType();
+  }
+
+  Future<void> _loadUserType() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userType = prefs.getString('userType') ?? '';
+    });
+  }
 
   Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx', 'xls'],
       withData: true,
@@ -64,7 +79,7 @@ class _ExcelUploadScreenState extends State<ExcelUploadScreen> {
       } else {
         print('Error: File bytes are null!');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not read file data. Try a different file.')));
+          CustomAlert.error('Could not read file data. Try a different file.');
         }
         return;
       }
@@ -78,9 +93,7 @@ class _ExcelUploadScreenState extends State<ExcelUploadScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File imported successfully'), backgroundColor: Colors.green),
-          );
+          CustomAlert.success('File imported successfully');
         }
         Get.find<DashboardController>().fetchStats();
         setState(() {
@@ -89,15 +102,13 @@ class _ExcelUploadScreenState extends State<ExcelUploadScreen> {
       } else {
         final errorMsg = json.decode(response.body)['message'] ?? 'Failed to import file';
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Import failed: $errorMsg'), backgroundColor: Colors.red),
-          );
+          CustomAlert.error('Import failed: $errorMsg');
         }
       }
     } catch (e) {
       print('Upload catch error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
+        CustomAlert.error('An error occurred: $e');
       }
     } finally {
       setState(() {
@@ -166,21 +177,36 @@ class _ExcelUploadScreenState extends State<ExcelUploadScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 55,
-                child: ElevatedButton(
-                  onPressed: _isUploading ? null : (_selectedFile == null ? _pickFile : _uploadFile),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isUploading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          _selectedFile == null ? 'Select Excel File' : 'Start Import',
-                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                child: _userType == 'admin'
+                    ? ElevatedButton(
+                        onPressed: _isUploading ? null : (_selectedFile == null ? _pickFile : _uploadFile),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                ),
+                        child: _isUploading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                _selectedFile == null ? 'Select Excel File' : 'Start Import',
+                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                              ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Only Administrators can import data.',
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),

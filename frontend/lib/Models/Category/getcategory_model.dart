@@ -14,7 +14,7 @@ class GetCategoryModel {
   factory GetCategoryModel.fromJson(Map<String, dynamic> json) {
     return GetCategoryModel(
       id: (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))?.toString(),
-      category: json['category'] as String?,
+      category: (json['category'] ?? json['name']) as String?,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );

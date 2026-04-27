@@ -13,6 +13,7 @@ class CustomSearchableDropDown<T> extends StatelessWidget {
   final IconData prefixIcon;
   final bool showAddButton;
   final VoidCallback? onAddPressed;
+  final bool enabled; // 👈 Added enabled property
 
   const CustomSearchableDropDown({
     super.key,
@@ -27,61 +28,86 @@ class CustomSearchableDropDown<T> extends StatelessWidget {
     this.prefixIcon = Icons.search,
     this.showAddButton = false,
     this.onAddPressed,
+    this.enabled = true, // Default to true
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: () => _showSearchModal(context),
-            child: FormField<T>(
-              initialValue: selectedItem,
-              validator: validator ?? (value) {
-                if (isRequired && value == null) {
-                  return '$label is required';
-                }
-                return null;
-              },
-              builder: (state) {
-                return InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: label,
-                    hintText: hintText,
-                    prefixIcon: Icon(prefixIcon, color: Theme.of(context).primaryColor),
-                    errorText: state.errorText,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          selectedItem != null ? itemAsString(selectedItem!) : hintText,
-                          style: TextStyle(
-                            color: selectedItem != null ? Colors.black87 : Colors.grey[600],
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.6, // Visual feedback for disabled state
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap:
+                  enabled
+                      ? () => _showSearchModal(context)
+                      : null, // Disable tap
+              child: FormField<T>(
+                initialValue: selectedItem,
+                validator:
+                    validator ??
+                    (value) {
+                      if (isRequired && value == null && enabled) {
+                        // Only validate if enabled
+                        return '$label is required';
+                      }
+                      return null;
+                    },
+                builder: (state) {
+                  return InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: label,
+                      hintText: hintText,
+                      prefixIcon: Icon(
+                        prefixIcon,
+                        color:
+                            enabled
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey,
                       ),
-                      const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                    ],
-                  ),
-                );
-              },
+                      errorText: state.errorText,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      filled: true,
+                      fillColor:
+                          Theme.of(context).colorScheme.surfaceContainerLowest,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selectedItem != null
+                                ? itemAsString(selectedItem as T)
+                                : hintText,
+                            style: TextStyle(
+                              color:
+                                  selectedItem != null && enabled
+                                      ? Colors.black87
+                                      : Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -123,22 +149,34 @@ class CustomSearchableDropDown<T> extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: 'Search $label...',
                         prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 0,
+                          horizontal: 16,
+                        ),
                       ),
                       onChanged: (value) {
-                        filteredItems.value = items
-                            .where((item) => itemAsString(item)
-                                .toLowerCase()
-                                .contains(value.toLowerCase()))
-                            .toList();
+                        filteredItems.value =
+                            items
+                                .where(
+                                  (item) => itemAsString(
+                                    item,
+                                  ).toLowerCase().contains(value.toLowerCase()),
+                                )
+                                .toList();
                       },
                     ),
                   ),
                   if (showAddButton) ...[
                     const SizedBox(width: 10),
                     IconButton(
-                      icon: const Icon(Icons.add_circle, color: Colors.blue, size: 30),
+                      icon: const Icon(
+                        Icons.add_circle,
+                        color: Colors.blue,
+                        size: 30,
+                      ),
                       onPressed: onAddPressed,
                     ),
                   ],
@@ -146,22 +184,28 @@ class CustomSearchableDropDown<T> extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Obx(() => ListView.separated(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    itemCount: filteredItems.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                        title: Text(itemAsString(item)),
-                        onTap: () {
-                          onChanged(item);
-                          Get.back();
-                        },
-                      );
-                    },
-                  )),
+              child: Obx(
+                () => ListView.separated(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  itemCount: filteredItems.length,
+                  separatorBuilder:
+                      (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final item = filteredItems[index];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 4,
+                      ),
+                      title: Text(itemAsString(item)),
+                      onTap: () {
+                        onChanged(item);
+                        Get.back();
+                      },
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),

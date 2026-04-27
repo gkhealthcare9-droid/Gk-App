@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:signature/signature.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
 import '../Widgets/CustomButton.dart';
 
@@ -129,7 +130,7 @@ class _CustomSignaturePopupState extends State<CustomSignaturePopup> {
                     CustomButton(
                       onTap: () async {
                         if (selectedEmployeeName == null) {
-                          Get.snackbar('Error', 'Please select an employee before signing');
+                          CustomAlert.error('Please select an employee before signing');
                           return;
                         }
                         if (widget.controller.isNotEmpty) {

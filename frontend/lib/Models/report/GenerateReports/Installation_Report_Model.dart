@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -174,7 +173,10 @@ class FetchInstallationReport {
       );
 
       return FetchInstallationReport(
-        id: (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))?.toString() ?? '',
+        id:
+            (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))
+                ?.toString() ??
+            '',
         reportNumber: json['reportNumber'] ?? 0,
         customer: Customer.fromJson(json['customer']),
         productCategory: ProductCategory.fromJson(json['productCategory']),
@@ -188,9 +190,9 @@ class FetchInstallationReport {
         engineer: Engineer.fromJson(json['engineer']),
         clientName: Client.fromJson(json['clientName']),
         trainedFor:
-        (json['trainedFor'] as List)
-            .map((e) => Client.fromJson(e))
-            .toList(),
+            (json['trainedFor'] as List)
+                .map((e) => Client.fromJson(e))
+                .toList(),
         clientSignature: json['clientSignature'],
         signedBy: Client.fromJson(json['signedBy']),
         pdf: json['pdf'],
@@ -207,13 +209,13 @@ class FetchInstallationReport {
         remarks: json['remarks'] ?? '',
         engineerName: json['engineerName'] ?? '',
         warrantyStartDate:
-        json['warrantyStartDate'] != null
-            ? DateTime.parse(json['warrantyStartDate'])
-            : null,
+            json['warrantyStartDate'] != null
+                ? DateTime.parse(json['warrantyStartDate'])
+                : null,
         warrantyEndDate:
-        json['warrantyEndDate'] != null
-            ? DateTime.parse(json['warrantyEndDate'])
-            : null,
+            json['warrantyEndDate'] != null
+                ? DateTime.parse(json['warrantyEndDate'])
+                : null,
         warrantyDuration: json['warrantyDuration'] ?? '',
         trainedEmployees: List<String>.from(json['trainedEmployees'] ?? []),
         complaintFrom: json['complaintFrom'] ?? '',
@@ -257,7 +259,10 @@ class Customer {
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
-      id: (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))?.toString() ?? '',
+      id:
+          (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))
+              ?.toString() ??
+          '',
       customerName: json['customerName'] ?? '',
       customerPhone: json['customerPhone'] ?? '',
       customerPhone2: json['customerPhone2'] ?? '',
@@ -300,7 +305,10 @@ class Manufacturer {
   Manufacturer({required this.id, required this.manufacturer});
 
   factory Manufacturer.fromJson(Map<String, dynamic> json) {
-    return Manufacturer(id: (json['id'] ?? (json['id'] ?? json['_id'])), manufacturer: json['manufacturer']);
+    return Manufacturer(
+      id: (json['id'] ?? (json['id'] ?? json['_id'])),
+      manufacturer: json['manufacturer'],
+    );
   }
 }
 

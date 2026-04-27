@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import '../../Services/ApiService.dart';
 import '../../Utils/Appconstants.dart';
 
 class DashboardController extends GetxController {
+  final Dio _dio = ApiService().dio;
   var stats = {}.obs;
   var isLoading = true.obs;
 
@@ -17,19 +17,10 @@ class DashboardController extends GetxController {
   Future<void> fetchStats() async {
     try {
       isLoading(true);
-      final prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      final response = await http.get(
-        Uri.parse(AppConstants.BASE_URL + AppConstants.DASHBOARD_STATS),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token ?? ''}',
-        },
-      );
+      final response = await _dio.get(AppConstants.DASHBOARD_STATS);
 
       if (response.statusCode == 200) {
-        stats.value = json.decode(response.body);
+        stats.value = response.data;
       } else {
         print('Error fetching stats: ${response.statusCode}');
       }

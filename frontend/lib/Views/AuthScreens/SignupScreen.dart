@@ -7,6 +7,7 @@ import '../Widgets/CustomTextField.dart';
 import '../Widgets/CustomButton.dart';
 import '../Widgets/CustomAgreeWidget.dart';
 import '../Widgets/CustomLazyLoader.dart';
+import '../Widgets/CustomAlert.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -179,15 +180,12 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: CustomButton(
                             onTap: () {
                               if (!agreedToTerms) {
-                                Get.snackbar(
-                                  'Alert',
-                                  'Please agree to terms and conditions',
-                                );
+                                CustomAlert.error('Please agree to terms and conditions');
                                 return;
                               }
                               if (_passwordController.text !=
                                   _confirmPasswordController.text) {
-                                Get.snackbar('Error', 'Passwords do not match');
+                                CustomAlert.error('Passwords do not match');
                                 return;
                               }
                               _signupController.signup(
@@ -195,6 +193,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 _emailController.text.trim(),
                                 _phoneController.text.trim(),
                                 _passwordController.text.trim(),
+                                '',
                               );
                             },
                             buttonText: 'GET STARTED',

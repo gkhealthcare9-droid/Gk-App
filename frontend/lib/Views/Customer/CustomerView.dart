@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../Widgets/CustomAppBar.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sales_grow/Controllers/AddCustomer/Customer_controller.dart';
 import 'package:sales_grow/Controllers/Product/Product.dart';
 import 'package:sales_grow/Models/Customer/Customer.dart';
-import 'package:sales_grow/Models/Employee/AddEmployee_model.dart';
+import 'package:sales_grow/Models/CustomerContact/CustomerContactModel.dart';
 // Import CustomerProduct
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
@@ -18,6 +19,8 @@ import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 
 import '../../Helpers/Helpers.dart';
+import '../../Utils/Colors.dart';
+import '../Widgets/CustomAlert.dart';
 import 'AddCustomer.dart';
 import 'AddEmployee.dart';
 import 'Addcustomer_product.dart';
@@ -49,7 +52,7 @@ class _CustomerViewState extends State<CustomerView> {
       });
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _customerController.fetchEmployees(widget.customer.id!);
+      _customerController.fetchCustomerContacts(widget.customer.id!);
       _productController.fetchCustomerProducts(widget.customer.id!);
     });
   }
@@ -60,13 +63,13 @@ class _CustomerViewState extends State<CustomerView> {
   }
 
   Future<void> _refresh() async {
-    await _customerController.fetchEmployees(widget.customer.id!);
+    await _customerController.fetchCustomerContacts(widget.customer.id!);
     await _productController.fetchCustomerProducts(widget.customer.id!);
   }
 
   Future<void> _openWhatsApp(String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
-      Get.snackbar('Error', 'No phone number provided');
+      CustomAlert.error('No phone number provided');
       return;
     }
     String digitsOnly = phoneNumber.replaceAll(RegExp(r'\D'), '');
@@ -75,7 +78,7 @@ class _CustomerViewState extends State<CustomerView> {
     } else if (digitsOnly.length == 12 && digitsOnly.startsWith('91')) {
       // OK
     } else if (digitsOnly.length < 10) {
-      Get.snackbar('Error', 'Invalid phone number format.');
+      CustomAlert.error('Invalid phone number format.');
       return;
     }
     final whatsappUrl = Uri.parse(
@@ -93,7 +96,7 @@ class _CustomerViewState extends State<CustomerView> {
       try {
         await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
       } catch (e) {
-        Get.snackbar('Error', 'Could not open WhatsApp or browser.');
+        CustomAlert.error('Could not open WhatsApp or browser.');
       }
     }
   }
@@ -123,15 +126,15 @@ class _CustomerViewState extends State<CustomerView> {
     );
   }
 
-  void _showDeleteEmployeeDialog(String employeeId, String employeeName) {
+  void _showDeleteContactDialog(String contactId, String contactName) {
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text(
-          'Delete Employee?',
+          'Delete Contact?',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: Text('Are you sure you want to delete "$employeeName"?'),
+        content: Text('Are you sure you want to delete "$contactName"?'),
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
@@ -139,9 +142,9 @@ class _CustomerViewState extends State<CustomerView> {
             onPressed: () {
               Get.back();
               _customerController
-                  .deleteEmployee(employeeId, widget.customer.id!)
+                  .deleteCustomerContact(contactId, widget.customer.id!)
                   .then((_) {
-                    _customerController.fetchEmployees(widget.customer.id!);
+                    _customerController.fetchCustomerContacts(widget.customer.id!);
                   });
             },
             child: const Text('Delete'),
@@ -154,12 +157,12 @@ class _CustomerViewState extends State<CustomerView> {
 
   Future<void> _launchPhoneCall(String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
-      Get.snackbar('Error', 'No phone number provided');
+      CustomAlert.error('No phone number provided');
       return;
     }
     final cleanPhone = phoneNumber.replaceAll(RegExp(r'\D'), '');
     if (!RegExp(r'^\d{10}$').hasMatch(cleanPhone)) {
-      Get.snackbar('Error', 'Invalid phone number format');
+      CustomAlert.error('Invalid phone number format');
       return;
     }
     final Uri phoneUri = Uri(scheme: 'tel', path: cleanPhone);
@@ -167,20 +170,20 @@ class _CustomerViewState extends State<CustomerView> {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
       } else {
-        Get.snackbar('Error', 'Unable to make phone call');
+        CustomAlert.error('Unable to make phone call');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to initiate call: $e');
+      CustomAlert.error('Failed to initiate call: $e');
     }
   }
 
-  Future<void> _pickEmployees(String id) async {
+  Future<void> _pickContacts(String id) async {
     final updated = await Navigator.push<List<Map<String, dynamic>>>(
       context,
       MaterialPageRoute(builder: (_) => AddEmployeeScreen(id: id)),
     );
     if (updated != null) {
-      print('Updated employees: $updated');
+      print('Updated contacts: $updated');
     }
   }
 
@@ -324,10 +327,7 @@ class _CustomerViewState extends State<CustomerView> {
                             if (amount == null ||
                                 invoiceCtrl.text.isEmpty ||
                                 descCtrl.text.isEmpty) {
-                              Get.snackbar(
-                                'Error',
-                                'Please fill all fields correctly',
-                              );
+                              CustomAlert.error('Please fill all fields correctly');
                               return;
                             }
 
@@ -447,7 +447,7 @@ class _CustomerViewState extends State<CustomerView> {
                   style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.Text(
-                  'Customer ID: ${c.customerQuniqueNumber ?? 'Not Available'}',
+                  'Customer ID: ${c.customerQuniqueNumber?.isNotEmpty == true ? 'GK-${c.customerQuniqueNumber!.replaceAll('GK-', '')}' : 'Not Available'}',
                   style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.Text(
@@ -487,26 +487,188 @@ class _CustomerViewState extends State<CustomerView> {
     }
   }
 
+  Widget _buildContactCard(GetCustomerContactModel e, CustomerModel c) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: AppColors.softGrey, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Name and Admin Actions
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: AppColors.paleBlue,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: AppColors.primaryBlue,
+                  radius: 18,
+                  child: Icon(Icons.person, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        e.name ?? 'N/A',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                      ),
+                      if (e.position?.position != null)
+                        Text(
+                          e.position!.position!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.black.withOpacity(0.6),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (_userType == 'admin') ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.accentBlue, size: 20),
+                    onPressed: () => Get.to(() => EditEmployeeScreen(employee: e, customerId: c.id!)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                    onPressed: () => _showDeleteContactDialog(e.id!, e.name ?? 'this contact'),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (e.email?.isNotEmpty == true) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.email_outlined, size: 16, color: AppColors.accentBlue),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          e.email!,
+                          style: const TextStyle(fontSize: 13, color: AppColors.black),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                
+                // Phones and Actions
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (e.phone?.isNotEmpty == true)
+                      Expanded(child: _phoneActionColumn(e.phone, 'Primary')),
+                    if (e.phone2?.isNotEmpty == true) ...[
+                      const SizedBox(width: 16),
+                      Expanded(child: _phoneActionColumn(e.phone2, 'Secondary')),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _phoneActionColumn(String? phone, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: AppColors.grey, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          phone ?? 'N/A',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.black),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _actionButton(
+              icon: Icons.call,
+              color: AppColors.accentBlue,
+              onTap: () => _launchPhoneCall(phone),
+            ),
+            const SizedBox(width: 8),
+            _actionButton(
+              icon: FontAwesomeIcons.whatsapp,
+              color: Colors.green,
+              onTap: () => _openWhatsApp(phone),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _actionButton({required dynamic icon, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: icon is IconData ? Icon(icon, size: 18, color: color) : FaIcon(icon, size: 18, color: color),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = widget.customer;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(c.customerQuniqueNumber ?? 'Customer'),
+      appBar: CustomAppBar(
+        title: c.customerQuniqueNumber?.isNotEmpty == true ? 'GK-${c.customerQuniqueNumber!.replaceAll('GK-', '')}' : 'Customer',
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.share_outlined, color: AppColors.primaryBlue),
             tooltip: 'Share Details',
             onPressed: _shareCustomerDetails,
           ),
           IconButton(
-            icon: const Icon(Icons.add_card_rounded),
+            icon: const Icon(Icons.add_card_outlined, color: AppColors.primaryBlue),
             tooltip: 'Add Outstanding',
             onPressed: () => _showAddOutstandingPopup(widget.customer.id!),
           ),
         ],
       ),
+      backgroundColor: AppColors.bgGrey,
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: Obx(() {
@@ -542,7 +704,7 @@ class _CustomerViewState extends State<CustomerView> {
                             if (widget.customer.id != null) {
                               _showDeleteCustomerDialog();
                             } else {
-                              Get.snackbar('Error', 'Invalid customer ID');
+                              CustomAlert.error('Invalid customer ID');
                             }
                           },
                         ),
@@ -580,7 +742,9 @@ class _CustomerViewState extends State<CustomerView> {
                     _buildDetailRow(
                       Icons.badge,
                       'Customer ID',
-                      c.customerQuniqueNumber ?? 'N/A',
+                      c.customerQuniqueNumber?.isNotEmpty == true
+                          ? 'GK-${c.customerQuniqueNumber!.replaceAll('GK-', '')}'
+                          : 'N/A',
                     ),
                     _buildDetailRow(
                       Icons.location_on,
@@ -597,15 +761,15 @@ class _CustomerViewState extends State<CustomerView> {
                 ),
                 const SizedBox(height: 24),
                 _sectionTitle(
-                  'Employees',
-                  trailing: ElevatedButton.icon(
+                  'Hospital Contacts',
+                  trailing: _userType == 'admin' ? ElevatedButton.icon(
                     onPressed: () {
-                      _pickEmployees(c.id!);
+                      _pickContacts(c.id!);
                     },
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Employee'),
+                    label: const Text('Add Contact'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: AppColors.accentBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -620,146 +784,29 @@ class _CustomerViewState extends State<CustomerView> {
                       ),
                       elevation: 0,
                     ),
-                  ),
+                  ) : null,
                 ),
-                if (_customerController.employees.isEmpty)
+                if (_customerController.hospitalContacts.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Text(
-                      'No employees found.',
+                      'No contacts found.',
                       style: TextStyle(color: Colors.grey),
                     ),
                   )
                 else
-                  ..._customerController.employees.map((GetEmployeeModel e) {
-                    return _cardContainer(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildDetailRowText(
-                                Icons.person,
-                                'Name',
-                                e.name ?? 'N/A',
-                              ),
-                            ),
-                            if (_userType == 'admin') ...[
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.blue,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  Get.to(
-                                    () => EditEmployeeScreen(
-                                      employee: e,
-                                      customerId: c.id!,
-                                    ),
-                                  );
-                                },
-                                tooltip: 'Edit ${e.name}',
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  _showDeleteEmployeeDialog(
-                                    e.id!,
-                                    e.name ?? 'this employee',
-                                  );
-                                },
-                                tooltip: 'Delete ${e.name}',
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.phone,
-                                size: 20,
-                                color: Colors.blue,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Ph: ${e.phone ?? 'N/A'}',
-                                  style: const TextStyle(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () => _launchPhoneCall(e.phone),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.purple.shade100,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: const EdgeInsets.all(8),
-                                  child: const Icon(
-                                    Icons.call,
-                                    color: Colors.blueAccent,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              GestureDetector(
-                                onTap: () => _openWhatsApp(e.phone),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.yellow.shade100,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: const EdgeInsets.all(8),
-                                  child: const FaIcon(
-                                    FontAwesomeIcons.whatsapp,
-                                    color: Colors.green,
-                                    size: 30,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDetailRow(Icons.email, 'Email', e.email ?? 'N/A'),
-                        const SizedBox(height: 8),
-                        _buildDetailRow(
-                          Icons.cake,
-                          'DOB',
-                          e.dob != null
-                              ? DateFormat('dd-MM-yyyy').format(e.dob!)
-                              : 'N/A',
-                        ),
-                        const SizedBox(height: 8),
-                        _buildDetailRow(
-                          Icons.work,
-                          'Position',
-                          e.position?.category ?? 'N/A',
-                        ),
-                      ],
-                    );
+                  ..._customerController.hospitalContacts.map((GetCustomerContactModel e) {
+                    return _buildContactCard(e, c);
                   }),
                 const SizedBox(height: 24),
                 _sectionTitle(
                   'Customer Products',
-                  trailing: ElevatedButton.icon(
+                  trailing: _userType == 'admin' ? ElevatedButton.icon(
                     onPressed: _onAddProductPressed,
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Product'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: AppColors.accentBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -774,7 +821,7 @@ class _CustomerViewState extends State<CustomerView> {
                       ),
                       elevation: 0,
                     ),
-                  ),
+                  ) : null,
                 ),
                 const SizedBox(height: 12),
                 Obx(() {
@@ -855,82 +902,78 @@ class _CustomerViewState extends State<CustomerView> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.blue,
-                                        ),
-                                        tooltip: 'Edit Product',
-                                        onPressed: () {
-                                          // Navigate to edit screen with product
-                                          Get.to(
-                                            () => EditCustomerProductScreen(
-                                              product: prod,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                        ),
-                                        tooltip: 'Delete Product',
-                                        onPressed: () async {
-                                          final confirm = await Get.dialog<
-                                            bool
-                                          >(
-                                            AlertDialog(
-                                              title: const Text(
-                                                'Delete Product?',
+                                      if (_userType == 'admin') ...[
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            color: AppColors.accentBlue,
+                                          ),
+                                          tooltip: 'Edit Product',
+                                          onPressed: () {
+                                            // Navigate to edit screen with product
+                                            Get.to(
+                                              () => EditCustomerProductScreen(
+                                                product: prod,
                                               ),
-                                              content: Text(
-                                                'Are you sure you want to delete this product?',
+                                            );
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.redAccent,
+                                          ),
+                                          tooltip: 'Delete Product',
+                                          onPressed: () async {
+                                            final confirm = await Get.dialog<
+                                              bool
+                                            >(
+                                              AlertDialog(
+                                                title: const Text(
+                                                  'Delete Product?',
+                                                ),
+                                                content: Text(
+                                                  'Are you sure you want to delete this product?',
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed:
+                                                        () => Get.back(
+                                                          result: false,
+                                                        ),
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed:
+                                                        () => Get.back(
+                                                          result: true,
+                                                        ),
+                                                    child: const Text('Delete'),
+                                                  ),
+                                                ],
                                               ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed:
-                                                      () => Get.back(
-                                                        result: false,
-                                                      ),
-                                                  child: const Text('Cancel'),
-                                                ),
-                                                TextButton(
-                                                  onPressed:
-                                                      () => Get.back(
-                                                        result: true,
-                                                      ),
-                                                  child: const Text('Delete'),
-                                                ),
-                                              ],
-                                            ),
-                                          );
+                                            );
 
-                                          if (confirm == true) {
-                                            final success =
-                                                await _productController
-                                                    .deleteCustomerProduct(
-                                                      prod.id,
+                                            if (confirm == true) {
+                                              final success =
+                                                  await _productController
+                                                      .deleteCustomerProduct(
+                                                        prod.id,
+                                                      );
+                                              if (success) {
+                                                CustomAlert.success('Product deleted successfully');
+                                                _productController
+                                                    .customerProducts
+                                                    .removeWhere(
+                                                      (p) => p.id == prod.id,
                                                     );
-                                            if (success) {
-                                              Get.snackbar(
-                                                'Deleted',
-                                                'Product deleted successfully',
-                                              );
-                                              _productController
-                                                  .customerProducts
-                                                  .removeWhere(
-                                                    (p) => p.id == prod.id,
-                                                  );
-                                            } else {
-                                              Get.snackbar(
-                                                'Error',
-                                                'Failed to delete product',
-                                              );
+                                              } else {
+                                                CustomAlert.error('Failed to delete product');
+                                              }
                                             }
-                                          }
-                                        },
-                                      ),
+                                          },
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -954,20 +997,21 @@ class _CustomerViewState extends State<CustomerView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.blue),
+          Icon(icon, size: 18, color: AppColors.accentBlue),
           const SizedBox(width: 12),
           Expanded(
             child: RichText(
               text: TextSpan(
                 text: '$label: ',
                 style: const TextStyle(
-                  color: Colors.black87,
+                  color: AppColors.black,
                   fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
                 children: [
                   TextSpan(
                     text: value,
-                    style: const TextStyle(fontWeight: FontWeight.normal),
+                    style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87),
                   ),
                 ],
               ),
@@ -981,19 +1025,20 @@ class _CustomerViewState extends State<CustomerView> {
   Widget _buildDetailRowText(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.blue),
+        Icon(icon, size: 18, color: AppColors.accentBlue),
         const SizedBox(width: 8),
         Text(
           '$label: ',
           style: const TextStyle(
-            color: Colors.black87,
+            color: AppColors.black,
             fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.normal),
+            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black87, fontSize: 14),
           ),
         ),
       ],
@@ -1002,7 +1047,7 @@ class _CustomerViewState extends State<CustomerView> {
 
   Widget _sectionTitle(String title, {Widget? trailing}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12, top: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1011,7 +1056,7 @@ class _CustomerViewState extends State<CustomerView> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.blue,
+              color: AppColors.accentBlue,
             ),
           ),
           if (trailing != null) trailing,
@@ -1023,15 +1068,22 @@ class _CustomerViewState extends State<CustomerView> {
   Widget _cardContainer({required List<Widget> children, VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300, width: 1),
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.softGrey, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

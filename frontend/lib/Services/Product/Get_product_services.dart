@@ -3,149 +3,80 @@ import 'package:flutter/foundation.dart';
 import 'package:sales_grow/Models/product/customer_product.dart';
 import 'package:sales_grow/Models/product/getproduct_model.dart';
 import 'package:sales_grow/Models/product/product_category_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../ApiService.dart';
 import '../../Utils/Appconstants.dart';
 
 class Productservices {
-  final Dio _dio = Dio();
+  final Dio _dio = ApiService().dio;
 
   Future<List<GetProductModel>?> fetchProducts() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.GETPRODUCT}',
-      );
+      final response = await _dio.get(AppConstants.GETPRODUCT);
 
       if (response.statusCode == 200) {
         if (response.data is List) {
           return (response.data as List)
               .map((item) => GetProductModel.fromJson(item))
               .toList();
-        } else {
-          print('Unexpected data format: ${response.data}');
-          return null;
         }
-      } else {
-        print('Failed to fetch products: ${response.statusCode}');
-        return null;
       }
-    } on DioError catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching products: $e');
       return null;
     }
   }
 
   Future<List<ProductCategoryModel>?> fetchCategories() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.CATEGORYPRODUCT}',
-      );
+      final response = await _dio.get(AppConstants.CATEGORYPRODUCT);
 
       if (response.statusCode == 200) {
         if (response.data is List) {
           return (response.data as List)
               .map((item) => ProductCategoryModel.fromJson(item))
               .toList();
-        } else {
-          print('Unexpected data format: ${response.data}');
-          return null;
         }
-      } else {
-        print('Failed to fetch categories: ${response.statusCode}');
-        return null;
       }
-    } on DioError catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching categories: $e');
       return null;
     }
   }
 
   Future<List<CustomerProduct>?> fetchCustomerProducts(String id) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.GETPRODUCTBYCUSTOMER}/$id',
-      );
+      final response = await _dio.get('${AppConstants.GETPRODUCTBYCUSTOMER}/$id');
 
       if (response.statusCode == 200) {
         if (response.data is List) {
           return (response.data as List)
               .map((item) => CustomerProduct.fromJson(item))
               .toList();
-        } else {
-          print('Unexpected data format: ${response.data}');
-          return null;
         }
-      } else {
-        print('Failed to fetch customer products: ${response.statusCode}');
-        return null;
       }
-    } on DioError catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching customer products: $e');
       return null;
     }
   }
 
   Future<List<Manufacturer>?> fetchManufacturers() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return null;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      final response = await _dio.get(
-        '${AppConstants.BASE_URL}${AppConstants.GETMANUFACTURER}',
-      );
+      final response = await _dio.get(AppConstants.GETMANUFACTURER);
 
       if (response.statusCode == 200) {
         if (response.data is List) {
           return (response.data as List)
               .map((item) => Manufacturer.fromJson(item))
               .toList();
-        } else {
-          print('Unexpected data format: ${response.data}');
-          return null;
         }
-      } else {
-        print('Failed to fetch manufacturers: ${response.statusCode}');
-        return null;
       }
-    } on DioError catch (e) {
-      print('Dio error: ${e.response?.data}');
       return null;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error fetching manufacturers: $e');
       return null;
     }
   }
@@ -160,23 +91,12 @@ class Productservices {
     required List<String>? fileNames,
   }) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return false;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
-      // Prepare multipart images list
       List<MultipartFile> multipartImages = [];
 
       if (imageBytesList != null && fileNames != null) {
         for (int i = 0; i < imageBytesList.length; i++) {
           multipartImages.add(
-            MultipartFile.fromBytes(
-              imageBytesList[i],
-              filename: fileNames[i],
-            ),
+            MultipartFile.fromBytes(imageBytesList[i], filename: fileNames[i]),
           );
         }
       }
@@ -191,36 +111,20 @@ class Productservices {
       });
 
       final response = await _dio.post(
-        '${AppConstants.BASE_URL}${AppConstants.GETPRODUCT}',
+        AppConstants.GETPRODUCT,
         data: formData,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
-      } else {
-        print('Failed to add product: ${response.statusCode}');
-        return false;
-      }
-    } on DioError catch (e) {
-      print('Dio error: ${e.response?.data}');
-      return false;
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error adding product: $e');
       return false;
     }
   }
 
   Future<bool> deleteProduct(String productId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('authToken');
-
-      if (token == null) return false;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      final url = '${AppConstants.BASE_URL}${AppConstants.DELETEPRODUCT}/$productId';
-
-      final response = await _dio.delete(url);
+      final response = await _dio.delete('${AppConstants.DELETEPRODUCT}/$productId');
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       print('Error while deleting product: $e');
@@ -237,15 +141,7 @@ class Productservices {
     required String categoryId,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('authToken');
-
-      if (token == null) return false;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      _dio.options.headers['Content-Type'] = 'application/json';
-
-      final url = '${AppConstants.BASE_URL}/api/v1/product/product/$productId';
+      final url = '/api/v1/product/product/$productId';
 
       final data = {
         "productName": name,
@@ -257,11 +153,8 @@ class Productservices {
 
       final response = await _dio.put(url, data: data);
       return response.statusCode == 200 || response.statusCode == 204;
-    } on DioError catch (e) {
-      print("Dio error updating product: ${e.response?.data}");
-      return false;
     } catch (e) {
-      print("General error updating product: $e");
+      print("Error updating product: $e");
       return false;
     }
   }
@@ -277,13 +170,6 @@ class Productservices {
     String? amcEnd,
   }) async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
-
-      if (token == null) return false;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
       Map<String, dynamic> requestBody = {
         'customer': customerId,
         'productCategory': productCategoryId,
@@ -296,29 +182,20 @@ class Productservices {
       };
 
       final response = await _dio.post(
-        '${AppConstants.BASE_URL}${AppConstants.ADDPRODUCT}',
+        AppConstants.ADDPRODUCT,
         data: requestBody,
       );
 
       return response.statusCode == 200 || response.statusCode == 201;
-    } on DioError catch (e) {
-      print('Dio error adding customer product: ${e.response?.data}');
-      return false;
     } catch (e) {
-      print('Unexpected error adding customer product: $e');
+      print('Error adding customer product: $e');
       return false;
     }
   }
 
   Future<bool> deleteCustomerProduct(String customerProductId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('authToken');
-      if (token == null) return false;
-
-      final url = '${AppConstants.BASE_URL}/customer-product/$customerProductId';
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-
+      final url = '/customer-product/$customerProductId';
       final response = await _dio.delete(url);
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
@@ -339,15 +216,7 @@ class Productservices {
     DateTime? amcEnd,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('authToken');
-
-      if (token == null) return false;
-
-      _dio.options.headers['Authorization'] = 'Bearer $token';
-      _dio.options.headers['Content-Type'] = 'application/json';
-
-      final url = '${AppConstants.BASE_URL}/api/v1/customer/product/$id';
+      final url = '/api/v1/customer/product/$id';
 
       final data = {
         "customer": customerId,
@@ -362,11 +231,8 @@ class Productservices {
 
       final response = await _dio.put(url, data: data);
       return response.statusCode == 200 || response.statusCode == 204;
-    } on DioError catch (e) {
-      print("Dio error updating customer product: ${e.response?.data}");
-      return false;
     } catch (e) {
-      print("General error updating customer product: $e");
+      print("Error updating customer product: $e");
       return false;
     }
   }

@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:sales_grow/Controllers/Product/Product.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import 'package:sales_grow/Views/Widgets/CustomAppBar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -217,50 +218,6 @@ class _ViewProductsState extends State<ViewProducts> {
                                   ),
                                 ),
                               ),
-                              // IconButton(
-                              //   icon: const Icon(Icons.delete, color: Colors.red),
-                              //   onPressed: () async {
-                              //     final confirm = await Get.dialog<bool>(
-                              //       AlertDialog(
-                              //         title: const Text('Confirm Delete'),
-                              //         content: Text(
-                              //           'Are you sure you want to delete "${product.productName}"?',
-                              //         ),
-                              //         actions: [
-                              //           TextButton(
-                              //             onPressed: () => Get.back(result: false),
-                              //             child: const Text('Cancel'),
-                              //           ),
-                              //           TextButton(
-                              //             onPressed: () => Get.back(result: true),
-                              //             child: const Text('Delete'),
-                              //           ),
-                              //         ],
-                              //       ),
-                              //     );
-                              //
-                              //     if (confirm == true) {
-                              //       final success = await _productController
-                              //           .deleteProduct(product.productId!.toString());
-                              //       if (success) {
-                              //         Get.snackbar(
-                              //           'Deleted',
-                              //           '${product.productName} has been deleted',
-                              //           snackPosition: SnackPosition.BOTTOM,
-                              //         );
-                              //         _productController.products.removeWhere(
-                              //               (p) => p.productId == product.productId,
-                              //         );
-                              //       } else {
-                              //         Get.snackbar(
-                              //           'Failed',
-                              //           'Failed to delete ${product.productName}',
-                              //           snackPosition: SnackPosition.BOTTOM,
-                              //         );
-                              //       }
-                              //     }
-                              //   },
-                              // ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -351,10 +308,10 @@ class ProductDetailScreen extends StatelessWidget {
     );
 
     if (success) {
-      Get.snackbar("Deleted", "Product has been deleted.");
+      CustomAlert.success("Product has been deleted.");
       Navigator.pop(context); // Go back after delete
     } else {
-      Get.snackbar("Failed", "Could not delete product.");
+      CustomAlert.error("Could not delete product.");
     }
   }
 
@@ -552,8 +509,7 @@ class ProductDetailScreen extends StatelessWidget {
                     .deleteProduct(product.productId!.toString());
 
                 if (success) {
-                  Get.snackbar(
-                    'Deleted',
+                  CustomAlert.success(
                     '${product.productName} has been deleted',
                   );
                   Get.find<ProductController>().products.removeWhere(
@@ -561,8 +517,7 @@ class ProductDetailScreen extends StatelessWidget {
                   );
                   Get.back(); // go back
                 } else {
-                  Get.snackbar(
-                    'Failed',
+                  CustomAlert.error(
                     'Failed to delete ${product.productName}',
                   );
                 }
@@ -752,9 +707,7 @@ class ProductDetailScreen extends StatelessWidget {
       ], text: 'Product Details: ${product.productName ?? 'Product'}');
     } catch (e) {
       print('Error generating or sharing PDF: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to share product details: $e')),
-      );
+      CustomAlert.error('Failed to share product details: $e');
     }
   }
 
@@ -849,63 +802,3 @@ class _FullScreenGalleryState extends State<FullScreenGallery> {
     );
   }
 }
-
-//
-//
-// class FullScreenGallery extends StatefulWidget {
-//   final List<String> images;
-//   final int initialIndex;
-//
-//   const FullScreenGallery({super.key, required this.images, required this.initialIndex});
-//
-//   @override
-//   State<FullScreenGallery> createState() => _FullScreenGalleryState();
-// }
-//
-// class _FullScreenGalleryState extends State<FullScreenGallery> {
-//   late PageController _pageController;
-//   late int _currentIndex;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _currentIndex = widget.initialIndex;
-//     _pageController = PageController(initialPage: _currentIndex);
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       appBar: AppBar(
-//         backgroundColor: Colors.transparent,
-//         title: Text('${_currentIndex + 1}/${widget.images.length}'),
-//         centerTitle: true,
-//       ),
-//       body: PhotoViewGallery.builder(
-//         itemCount: widget.images.length,
-//         pageController: _pageController,
-//         backgroundDecoration: const BoxDecoration(color: Colors.black),
-//         onPageChanged: (index) {
-//           setState(() {
-//             _currentIndex = index;
-//           });
-//         },
-//         builder: (context, index) {
-//           final imageUrl = widget.images[index];
-//           return PhotoViewGalleryPageOptions(
-//             imageProvider: NetworkImage(imageUrl),
-//             heroAttributes: PhotoViewHeroAttributes(tag: imageUrl),
-//             minScale: PhotoViewComputedScale.contained * 1,
-//             maxScale: PhotoViewComputedScale.covered * 2.5,
-//           );
-//         },
-//         loadingBuilder: (context, event) => const Center(
-//           child: CircularProgressIndicator(
-//             color:Colors.white,
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }

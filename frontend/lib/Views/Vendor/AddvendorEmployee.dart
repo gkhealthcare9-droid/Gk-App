@@ -7,6 +7,7 @@ import 'package:sales_grow/Views/Widgets/CustomButton.dart';
 import 'package:sales_grow/Views/Widgets/CustomDropDown.dart';
 import 'package:sales_grow/Views/Widgets/CustomTextField.dart';
 import 'package:get/get.dart';
+import '../Widgets/CustomAlert.dart';
 
 class AddvendorEmployeeScreen extends StatefulWidget {
   final String id;
@@ -131,15 +132,15 @@ class _AddvendorEmployeeScreenState extends State<AddvendorEmployeeScreen> {
                     final phone = phoneController.text.trim();
 
                     if (name.isEmpty) {
-                      Get.snackbar('Validation Error', 'Name is required');
+                      CustomAlert.showError(context: context, message: 'Name is required');
                       return;
                     }
                     if (phone.isEmpty) {
-                      Get.snackbar('Validation Error', 'Phone number is required');
+                      CustomAlert.showError(context: context, message: 'Phone number is required');
                       return;
                     }
                     if (selected == null) {
-                      Get.snackbar('Validation Error', 'Please select a position');
+                      CustomAlert.showError(context: context, message: 'Please select a position');
                       return;
                     }
 

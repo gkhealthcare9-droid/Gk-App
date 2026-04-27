@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import '../../Models/Leads/Leads_Model.dart';
 import '../../Services/leads/Leads_Services.dart';
+import '../../Views/Widgets/CustomAlert.dart';
+import '../../Views/Widgets/CustomBottomNav.dart';
 
 class LeadController extends GetxController {
   final LeadsServices _leadsServices = LeadsServices();
@@ -25,10 +27,10 @@ class LeadController extends GetxController {
       if (fetched != null) {
         followUps.assignAll(fetched); // Update the observable list
       } else {
-        Get.snackbar("Error", "No follow-up data found");
+        CustomAlert.error("No follow-up data found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch follow-ups: $e");
+      CustomAlert.error("Failed to fetch follow-ups: $e");
     } finally {
       isLoading.value = false;
     }
@@ -65,11 +67,11 @@ class LeadController extends GetxController {
         leads.assignAll(fetchedLeads); // Update the observable list
       }
       if (leads.isEmpty) {
-        Get.snackbar('Info', 'No leads found');
+        // Optional: CustomAlert.info('No leads found');
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar('Error', errorMessage.value);
+      CustomAlert.error(errorMessage.value);
     } finally {
       isLoading.value = false;
     }
@@ -83,20 +85,22 @@ class LeadController extends GetxController {
     try {
       final response = await _leadsServices.addLead(postLead);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Lead added successfully');
+        CustomAlert.success('Lead added successfully');
         await fetchLeads(); // Refresh the leads list after adding
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
       } else {
         errorMessage.value = 'Failed to add lead: ${response.statusCode}';
-        Get.snackbar('Error', errorMessage.value);
+        CustomAlert.error(errorMessage.value);
       }
     } on DioException catch (e) {
       errorMessage.value =
           e.response?.data['message'] ??
           'Server error: ${e.response?.statusCode}';
-      Get.snackbar('Error', errorMessage.value);
+      CustomAlert.error(errorMessage.value);
     } catch (e) {
       errorMessage.value = 'Unexpected error: $e';
-      Get.snackbar('Error', errorMessage.value);
+      CustomAlert.error(errorMessage.value);
     } finally {
       isLoading.value = false;
     }
@@ -112,13 +116,15 @@ class LeadController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ Lead updated successfully');
-        Get.snackbar('Success', 'Lead updated successfully');
+        CustomAlert.success('Lead updated successfully');
         await fetchLeads();
+        await Future.delayed(const Duration(seconds: 2));
+        Get.offAll(() => const CustomBottomNavBar());
         return true;
       } else {
         print('❌ Failed to update lead: ${response.statusCode}');
         print('❌ Response: ${response.data}');
-        Get.snackbar('Error', 'Failed: ${response.statusCode}');
+        CustomAlert.error('Failed: ${response.statusCode}');
         return false;
       }
     } on DioException catch (e) {
@@ -126,27 +132,26 @@ class LeadController extends GetxController {
       print('🔸 Status code: ${e.response?.statusCode}');
       print('🔸 Error data: ${e.response?.data}');
       print('🔸 Error message: ${e.message}');
-      Get.snackbar('Error', e.response?.data['message'] ?? 'Server error occurred');
+      CustomAlert.error(e.response?.data['message'] ?? 'Server error occurred');
       return false;
     } catch (e) {
       print('❌ Unexpected error in controller: $e');
-      Get.snackbar('Error', 'Something went wrong while updating lead');
+      CustomAlert.error('Something went wrong while updating lead');
       return false;
     }
   }
-
 
   Future<void> updateLeadStatus(String leadId, String newStatus) async {
     try {
       final response = await _leadsServices.updateLeadStatus(leadId, newStatus);
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Status updated');
+        CustomAlert.success('Status updated');
         fetchLeads();
       } else {
-        Get.snackbar('Error', 'Failed to update status');
+        CustomAlert.error('Failed to update status');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Exception: $e');
+      CustomAlert.error('Exception: $e');
     }
   }
 }

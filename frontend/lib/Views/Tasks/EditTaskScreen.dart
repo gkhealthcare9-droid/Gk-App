@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:sales_grow/Models/TaskModel/Task_Mode.dart';
+import 'package:sales_grow/Views/Widgets/CustomAlert.dart';
 import '../../Controllers/Task/Task_Controller.dart';
 
 class EditTaskScreen extends StatefulWidget {
@@ -122,20 +123,11 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       bool success = await taskController.updateTask(updatedTask);
       if (success) {
         await taskController.allfetchTasks();
+        CustomAlert.success('Task updated successfully');
+        await Future.delayed(const Duration(seconds: 2));
         Get.back();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Task updated successfully'),
-            backgroundColor: Color(0xFF14B8A6),
-          ),
-        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${taskController.errorMessage.value}'),
-            backgroundColor: const Color(0xFFF43F5E),
-          ),
-        );
+        CustomAlert.error('Error: ${taskController.errorMessage.value}');
       }
     }
   }
@@ -361,14 +353,14 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                                 ),
                                 SizedBox(height: 16),
                                 Obx(() {
-                                  // Extract unique assigned users by ID
+                                  // Extract unique assigned users by ID, safely handling null assignedTo
                                   final seenIds = <String>{};
                                   final uniqueAssignees =
                                       taskController.allTasks
                                           .map((task) => task.assignedTo)
-                                          .where(
-                                            (user) => seenIds.add(user.id),
-                                          ) // filters duplicates
+                                          .where((user) => user != null) // 👈 Safe null check
+                                          .where((user) => seenIds.add(user!.id)) 
+                                          .map((user) => user!) // cast to non-null
                                           .toList();
 
                                   return DropdownButtonFormField<String>(
