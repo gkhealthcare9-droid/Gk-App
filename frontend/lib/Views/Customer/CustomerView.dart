@@ -581,17 +581,12 @@ class _CustomerViewState extends State<CustomerView> {
                 ],
                 
                 // Phones and Actions
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (e.phone?.isNotEmpty == true)
-                      Expanded(child: _phoneActionColumn(e.phone, 'Primary')),
-                    if (e.phone2?.isNotEmpty == true) ...[
-                      const SizedBox(width: 16),
-                      Expanded(child: _phoneActionColumn(e.phone2, 'Secondary')),
-                    ],
-                  ],
-                ),
+                if (e.phone?.isNotEmpty == true)
+                  _phoneActionRow(e.phone, 'Primary'),
+                if (e.phone2?.isNotEmpty == true) ...[
+                  const SizedBox(height: 12),
+                  _phoneActionRow(e.phone2, 'Secondary'),
+                ],
               ],
             ),
           ),
@@ -600,22 +595,23 @@ class _CustomerViewState extends State<CustomerView> {
     );
   }
 
-  Widget _phoneActionColumn(String? phone, String label) {
+  Widget _phoneActionRow(String? phone, String label) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: AppColors.grey, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 11, color: AppColors.grey, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 2),
-        Text(
-          phone ?? 'N/A',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.black),
-        ),
-        const SizedBox(height: 8),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Expanded(
+              child: Text(
+                phone ?? 'N/A',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black),
+              ),
+            ),
             _actionButton(
               icon: Icons.call,
               color: AppColors.accentBlue,
