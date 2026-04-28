@@ -39,8 +39,6 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
   final TextEditingController position = TextEditingController();
   final TextEditingController city = TextEditingController();
   final TextEditingController state = TextEditingController();
-  final TextEditingController country = TextEditingController();
-  final TextEditingController pincode = TextEditingController();
   final TextEditingController company = TextEditingController();
   final TextEditingController description = TextEditingController();
   final TextEditingController source = TextEditingController();
@@ -105,8 +103,6 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
     position.dispose();
     city.dispose();
     state.dispose();
-    country.dispose();
-    pincode.dispose();
     company.dispose();
     description.dispose();
     source.dispose();
@@ -132,8 +128,6 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
         city: city.text,
         assigned: assigned.text,
         state: state.text,
-        country: country.text,
-        pincode: pincode.text,
         company: company.text,
         description: description.text,
         source: source.text,
@@ -160,7 +154,6 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
         address.text = c.addressOne ?? '';
         city.text = c.city ?? '';
         state.text = c.state ?? '';
-        pincode.text = c.pincode ?? '';
         company.text = c.customerCompany ?? '';
         
         // Match selection objects for dropdowns
@@ -196,7 +189,6 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
       address.clear();
       city.clear();
       state.clear();
-      pincode.clear();
       company.clear();
       selectedStateObj = null;
       selectedCityObj = null;
@@ -310,7 +302,6 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
                               });
                             },
                           )),
-                          CustomTextField(label: 'Zip Code', hintText: '6-digit code', controller: pincode, icon: Icons.pin_drop_rounded),
                         ],
                       ),
 

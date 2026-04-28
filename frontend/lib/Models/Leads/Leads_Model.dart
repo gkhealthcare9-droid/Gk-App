@@ -8,8 +8,6 @@ class PostLead {
   String city;
   String assigned;
   String state;
-  String country;
-  String pincode;
   String company;
   String description;
   String source;
@@ -28,8 +26,6 @@ class PostLead {
     required this.city,
     required this.assigned,
     required this.state,
-    required this.country,
-    required this.pincode,
     required this.company,
     required this.status,
     required this.description,
@@ -48,8 +44,6 @@ class PostLead {
     'city': city,
     'assigned': assigned,
     'state': state,
-    'country': country,
-    'pincode': pincode,
     'company': company,
     'status': status,
     'description': description,
@@ -69,9 +63,7 @@ class LeadModel {
   final String? city;
   final String? email;
   final String? state;
-  final String? country;
   final String? phone;
-  final String? pincode;
   final String? company;
   final String? description;
   final String? status;
@@ -90,9 +82,7 @@ class LeadModel {
     this.city,
     this.email,
     this.state,
-    this.country,
     this.phone,
-    this.pincode,
     this.company,
     this.description,
     this.status,
@@ -113,9 +103,7 @@ class LeadModel {
       city: json['city'] as String?,
       email: json['email'] as String?,
       state: json['state'] as String?,
-      country: json['country'] as String?,
       phone: json['phone'] as String?,
-      pincode: json['pincode'] as String?,
       company: json['company'] as String?,
       description: json['description'] as String?,
       status: json['status'] is String ? json['status'] : null,
@@ -149,9 +137,7 @@ class LeadModel {
       'city': city,
       'email': email,
       'state': state,
-      'country': country,
       'phone': phone,
-      'pincode': pincode,
       'company': company,
       'description': description,
       'status': status,

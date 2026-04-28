@@ -65,7 +65,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       billingCityController.text        = customer.city ?? '';
       billingStateController.text       = customer.state ?? '';
       billingPincodeController.text     = customer.pincode ?? '';
-      
+
       // Initialize dropdown selections
       _initializeSelections(customer.state, customer.city);
 

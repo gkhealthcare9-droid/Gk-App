@@ -31,15 +31,7 @@ const Lead = sequelize.define('Lead', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  country: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
   phone: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  pincode: {
     type: DataTypes.STRING,
     allowNull: true,
   },

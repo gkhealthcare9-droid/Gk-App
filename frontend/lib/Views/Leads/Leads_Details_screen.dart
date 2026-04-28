@@ -185,8 +185,6 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       _buildInfoRow(Icons.location_on, 'Address', widget.lead.address),
                       _buildInfoRow(Icons.location_city, 'City', widget.lead.city),
                       _buildInfoRow(Icons.map, 'State', widget.lead.state),
-                      _buildInfoRow(Icons.flag, 'Country', widget.lead.country),
-                      _buildInfoRow(Icons.pin, 'Pincode', widget.lead.pincode),
                     ],
                   ),
                 ),

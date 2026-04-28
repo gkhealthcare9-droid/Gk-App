@@ -195,231 +195,219 @@ class _vendorviewState extends State<vendorview> {
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: Obx(() {
-          if (_vendorController.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionTitle(
-                  'Vendor Details',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_userType == 'admin') ...[
-
-            IconButton(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionTitle(
+                'Vendor Details',
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_userType == 'admin') ...[
+                      IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
                           Get.to(() => EditvendorScreen(
-                            vendor: widget.vendor,
-                          ));
+                                vendor: widget.vendor,
+                              ));
                         },
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
                           if (widget.vendor.id != null) {
-                                showDeleteDialog(
-                                  title: 'Delete Vendor?',
-                                  message: 'Are you sure you want to delete this vendor?',
-                                  shouldPopView: true,
-                                  onConfirm: () {
-                                    _vendorController.deletevendor(widget.vendor.id!);
-                                  },
-                                );
+                            showDeleteDialog(
+                              title: 'Delete Vendor?',
+                              message: 'Are you sure you want to delete this vendor?',
+                              shouldPopView: true,
+                              onConfirm: () {
+                                _vendorController.deletevendor(widget.vendor.id!);
+                              },
+                            );
                           } else {
                             CustomAlert.showError(context: context, message: 'Invalid vendor ID');
                           }
                         },
                       ),
-          ]
-                    ],
-                  ),
-                ),
-                _cardContainer(
-                  children: [
-                    _buildDetailRow(Icons.person, 'Name', c.vendorName ?? 'N/A'),
-                    _buildDetailRow(Icons.person, 'Company Website', c.vendorName ?? 'N/A'),
-                    _buildDetailRow(Icons.call, 'Phone', c.vendorPhone ?? 'N/A'),
-                    _buildDetailRow(Icons.email, 'Email', c.vendorEmail ?? 'N/A'),
-                    _buildDetailRow(Icons.business, 'Company', c.vendorCompany ?? 'N/A'),
-                    _buildDetailRow(Icons.fingerprint, 'GSTIN', c.vendorGSTIN ?? 'N/A'),
-                    _buildDetailRow(Icons.fingerprint, 'unique id', c.vendorQuniqeNumber ?? 'N/A'),
-                    _buildDetailRow(
-                      Icons.location_on,
-                      'Address',
-                      '${c.addressOne ?? ''}, ${c.addressTwo ?? ''}, ${c.city ?? ''}, ${c.state ?? ''} - ${c.pincode ?? ''}',
-                    ),
+                    ]
                   ],
                 ),
-                const SizedBox(height: 24),
-                _sectionTitle(
-                  'Employees',
-                  trailing: ElevatedButton.icon(
-                    onPressed: () {
-                      _pickEmployees(c.id!);
-                    },
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Employee'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                      elevation: 0,
+              ),
+              _cardContainer(
+                children: [
+                  _buildDetailRow(Icons.person, 'Name', c.vendorName ?? 'N/A'),
+                  _buildDetailRow(Icons.person, 'Company Website', c.vendorName ?? 'N/A'),
+                  _buildDetailRow(Icons.call, 'Phone', c.vendorPhone ?? 'N/A'),
+                  _buildDetailRow(Icons.email, 'Email', c.vendorEmail ?? 'N/A'),
+                  _buildDetailRow(Icons.business, 'Company', c.vendorCompany ?? 'N/A'),
+                  _buildDetailRow(Icons.fingerprint, 'GSTIN', c.vendorGSTIN ?? 'N/A'),
+                  _buildDetailRow(Icons.fingerprint, 'unique id', c.vendorQuniqeNumber ?? 'N/A'),
+                  _buildDetailRow(
+                    Icons.location_on,
+                    'Address',
+                    '${c.addressOne ?? ''}, ${c.addressTwo ?? ''}, ${c.city ?? ''}, ${c.state ?? ''} - ${c.pincode ?? ''}',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _sectionTitle(
+                'Employees',
+                trailing: ElevatedButton.icon(
+                  onPressed: () {
+                    _pickEmployees(c.id!);
+                  },
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add Employee'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    elevation: 0,
                   ),
                 ),
-                if (_vendorController.employees.isEmpty)
-                  const Padding(
+              ),
+              Obx(() {
+                if (_vendorController.isLoading.value) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (_vendorController.employees.isEmpty) {
+                  return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Text(
                       'No employees found.',
                       style: TextStyle(color: Colors.grey),
                     ),
-                  )
-                else
-                  ..._vendorController.employees.map((e) => _buildEmployeeCard(e, c)),
-                const SizedBox(height: 24),
-
-                _sectionTitle(
-                  'Vendor Products',
-                  trailing: ElevatedButton.icon(
-                    onPressed: _onAddProductPressed,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Product'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      elevation: 0,
+                  );
+                }
+                return Column(
+                  children: _vendorController.employees.map((e) => _buildEmployeeCard(e, c)).toList(),
+                );
+              }),
+              const SizedBox(height: 24),
+              _sectionTitle(
+                'Vendor Products',
+                trailing: ElevatedButton.icon(
+                  onPressed: _onAddProductPressed,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add Product'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    elevation: 0,
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              if (_addedProducts.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'No products added.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+              else
+                ..._addedProducts.map((prod) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _cardContainer(
+                      children: [
+                        // 1) Category (always present)
+                        _buildDetailRow(
+                          Icons.category,
+                          'Category',
+                          prod['category'] ?? 'N/A',
+                        ),
 
-                const SizedBox(height: 12),
+                        // 2) Dialysis Machine subfields (only if category = “Dialysis Machine”)
+                        if (prod['category'] == 'Dialysis Machine') ...[
+                          const SizedBox(height: 8),
+                          const Divider(),
+                          const SizedBox(height: 8),
 
-                if (_addedProducts.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'No products added.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                else
-                  ..._addedProducts.map((prod) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _cardContainer(
-                        children: [
-                          // 1) Category (always present)
                           _buildDetailRow(
-                            Icons.category,
-                            'Category',
-                            prod['category'] ?? 'N/A',
+                            Icons.build,
+                            'Make',
+                            prod['make'] ?? 'N/A',
                           ),
-
-                          // 2) Dialysis Machine subfields (only if category = “Dialysis Machine”)
-                          if (prod['category'] == 'Dialysis Machine') ...[
-                            const SizedBox(height: 8),
-                            const Divider(),
-                            const SizedBox(height: 8),
-
-                            _buildDetailRow(
-                              Icons.build,
-                              'Make',
-                              prod['make'] ?? 'N/A',
-                            ),
-                            _buildDetailRow(
-                              Icons.settings,
-                              'Model',
-                              prod['model'] ?? 'N/A',
-                            ),
-                            _buildDetailRow(
-                              Icons.confirmation_num,
-                              'Qty',
-                              prod['qty'] ?? 'N/A',
-                            ),
-                            _buildDetailRow(
-                              Icons.tag,
-                              'Serial No',
-                              prod['serialNo'] ?? 'N/A',
-                            ),
-                            _buildDetailRow(
-                              Icons.date_range,
-                              'AMC Start Date',
-                              prod['amcStart'] != null
-                                  ? DateFormat('dd/MM/yyyy').format(
-                                DateTime.parse(prod['amcStart']!),
-                              )
-                                  : 'N/A',
-                            ),
-                            _buildDetailRow(
-                              Icons.date_range,
-                              'AMC End Date',
-                              prod['amcEnd'] != null
-                                  ? DateFormat('dd/MM/yyyy').format(
-                                DateTime.parse(prod['amcEnd']!),
-                              )
-                                  : 'N/A',
-                            ),
-                          ],
-
-                          // 3) Telle Response (always present)
                           _buildDetailRow(
-                            Icons.call_to_action,
-                            'Telle Response',
-                            prod['telleResponse'] ?? 'N/A',
+                            Icons.settings,
+                            'Model',
+                            prod['model'] ?? 'N/A',
                           ),
-
-                          // 4) Communication (always present)
                           _buildDetailRow(
-                            Icons.message,
-                            'Communication',
-                            prod['communication'] ?? 'N/A',
+                            Icons.confirmation_num,
+                            'Qty',
+                            prod['qty'] ?? 'N/A',
                           ),
-
-                          // 5) Follow‐Up Date (always present)
                           _buildDetailRow(
-                            Icons.event,
-                            'Follow-Up Date',
-                            prod['followUpDate'] != null
-                                ? DateFormat('dd/MM/yyyy').format(
-                              DateTime.parse(prod['followUpDate']!),
-                            )
-                                : 'N/A',
+                            Icons.tag,
+                            'Serial No',
+                            prod['serialNo'] ?? 'N/A',
+                          ),
+                          _buildDetailRow(
+                            Icons.date_range,
+                            'AMC Start Date',
+                            prod['amcStart'] != null ? DateFormat('dd/MM/yyyy').format(DateTime.parse(prod['amcStart']!)) : 'N/A',
+                          ),
+                          _buildDetailRow(
+                            Icons.date_range,
+                            'AMC End Date',
+                            prod['amcEnd'] != null ? DateFormat('dd/MM/yyyy').format(DateTime.parse(prod['amcEnd']!)) : 'N/A',
                           ),
                         ],
-                      ),
-                    );
-                  }).toList(),
-              ],
-            ),
 
-          );
-        }),
+                        // 3) Telle Response (always present)
+                        _buildDetailRow(
+                          Icons.call_to_action,
+                          'Telle Response',
+                          prod['telleResponse'] ?? 'N/A',
+                        ),
+
+                        // 4) Communication (always present)
+                        _buildDetailRow(
+                          Icons.message,
+                          'Communication',
+                          prod['communication'] ?? 'N/A',
+                        ),
+
+                        // 5) Follow‐Up Date (always present)
+                        _buildDetailRow(
+                          Icons.event,
+                          'Follow-Up Date',
+                          prod['followUpDate'] != null ? DateFormat('dd/MM/yyyy').format(DateTime.parse(prod['followUpDate']!)) : 'N/A',
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+            ],
+          ),
+        ),
       ),
     );
   }
+
 
   Widget _buildEmployeeCard(dynamic e, VendorModel v) {
     return Container(

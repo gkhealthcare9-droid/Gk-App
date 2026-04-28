@@ -6,6 +6,9 @@ import '../../Controllers/AuthController/ProfileController.dart';
 import '../../Controllers/Leads/Leads_Controller.dart';
 import '../../Models/Leads/Leads_Model.dart';
 import '../Widgets/CustomAppBar.dart';
+import '../../Controllers/Location/Location_controller.dart';
+import '../Widgets/CustomSearchableDropDown.dart';
+import '../Widgets/CustomTextField.dart';
 import 'All_Leads_Screen.dart';
 
 class EditLeadScreen extends StatefulWidget {
@@ -22,6 +25,7 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
   final LeadController _leadController = Get.find<LeadController>();
   final ProfileController _profileController = Get.put(ProfileController());
   final CustomerController _customerController = Get.put(CustomerController());
+  final LocationController _locationController = Get.put(LocationController());
 
   // Text Controllers
   TextEditingController uniqueId = TextEditingController(text: 'GK');
@@ -32,8 +36,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
   late TextEditingController positionCtrl;
   late TextEditingController cityCtrl;
   late TextEditingController stateCtrl;
-  late TextEditingController countryCtrl;
-  late TextEditingController pincodeCtrl;
   late TextEditingController companyCtrl;
   late TextEditingController descriptionCtrl;
   late TextEditingController sourceCtrl;
@@ -44,6 +46,9 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
   String? selectedCategoryId;
   String selectedLeadType = '';
   String selectedStatus = '';
+
+  dynamic selectedStateObj;
+  dynamic selectedCityObj;
 
   final List<String> _leadTypes = ['Hot', 'Cold', 'Warm'];
   final List<String> _statuses = ['New', 'Open', 'Closed'];
@@ -61,8 +66,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
     positionCtrl = TextEditingController(text: lead.position);
     cityCtrl = TextEditingController(text: lead.city);
     stateCtrl = TextEditingController(text: lead.state);
-    countryCtrl = TextEditingController(text: lead.country);
-    pincodeCtrl = TextEditingController(text: lead.pincode);
     companyCtrl = TextEditingController(text: lead.company);
     descriptionCtrl = TextEditingController(text: lead.description);
     sourceCtrl = TextEditingController(text: lead.source);
@@ -89,7 +92,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
         lead.address != null ||
         lead.city != null ||
         lead.state != null ||
-        lead.pincode != null ||
         lead.company != null;
 
     // Fetch categories and users
@@ -108,6 +110,9 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
           selectedCategoryId = _customerController.categoryList.first.id;
         });
       }
+    });
+    _locationController.fetchStates().then((_) {
+      _matchLocationObjects(stateCtrl.text, cityCtrl.text);
     });
 
     // Add listener to uniqueId
@@ -145,8 +150,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
     positionCtrl.dispose();
     cityCtrl.dispose();
     stateCtrl.dispose();
-    countryCtrl.dispose();
-    pincodeCtrl.dispose();
     companyCtrl.dispose();
     descriptionCtrl.dispose();
     sourceCtrl.dispose();
@@ -154,6 +157,33 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
     assignedCtrl.dispose();
     uniqueIdFocus.dispose();
     super.dispose();
+  }
+
+  void _showAddCityDialog() {
+    final cityController = TextEditingController();
+    Get.defaultDialog(
+      title: 'Global Repository Update',
+      content: Padding(
+          padding: const EdgeInsets.all(10),
+          child: CustomTextField(
+              label: 'New City Name',
+              hintText: 'Enter city name',
+              controller: cityController,
+              icon: Icons.add_location_alt_rounded)),
+      confirm: ElevatedButton(
+        onPressed: () async {
+          if (cityController.text.isNotEmpty && selectedStateObj != null) {
+            await _locationController.addCity(
+                cityController.text.trim(), selectedStateObj['id']);
+            Get.back();
+            CustomAlert.success('Geography updated.');
+          }
+        },
+        child: const Text('Register City'),
+      ),
+      cancel:
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+    );
   }
 
   Future<void> _submit() async {
@@ -167,8 +197,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
         city: cityCtrl.text,
         assigned: assignedCtrl.text,
         state: stateCtrl.text,
-        country: countryCtrl.text,
-        pincode: pincodeCtrl.text,
         company: companyCtrl.text,
         description: descriptionCtrl.text,
         source: sourceCtrl.text,
@@ -194,6 +222,24 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
     }
   }
 
+  void _matchLocationObjects(String? stateName, String? cityName) {
+    if (stateName != null && stateName.isNotEmpty) {
+      final sm = _locationController.states
+          .firstWhereOrNull((s) => s['name'] == stateName);
+      if (sm != null) {
+        setState(() => selectedStateObj = sm);
+        _locationController.fetchCitiesByState(sm['id']).then((_) {
+          if (cityName != null && cityName.isNotEmpty) {
+            setState(() {
+              selectedCityObj = _locationController.filteredCities
+                  .firstWhereOrNull((c) => c['name'] == cityName);
+            });
+          }
+        });
+      }
+    }
+  }
+
   Future<void> fetchCustomer(String code) async {
     final hadFocus = uniqueIdFocus.hasFocus;
     final selection = uniqueId.selection;
@@ -202,26 +248,16 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
     setState(() {
       if (_customerController.customer.value.customerName != null &&
           _customerController.isCustomerFound.value) {
-        nameCtrl.text = _customerController.customer.value.customerName ?? '';
-        emailCtrl.text = _customerController.customer.value.customerEmail ?? '';
-        phoneCtrl.text = _customerController.customer.value.customerPhone ?? '';
-        addressCtrl.text = [
-          if (_customerController.customer.value.addressOne?.isNotEmpty ??
-              false)
-            _customerController.customer.value.addressOne!,
-          if (_customerController.customer.value.addressTwo?.isNotEmpty ??
-              false)
-            _customerController.customer.value.addressTwo!,
-          if (_customerController.customer.value.city?.isNotEmpty ?? false)
-            _customerController.customer.value.city!,
-          if (_customerController.customer.value.pincode?.isNotEmpty ?? false)
-            _customerController.customer.value.pincode!,
-        ].join(', ');
-        cityCtrl.text = _customerController.customer.value.city ?? '';
-        stateCtrl.text = _customerController.customer.value.state ?? '';
-        pincodeCtrl.text = _customerController.customer.value.pincode ?? '';
-        companyCtrl.text =
-            _customerController.customer.value.customerCompany ?? '';
+        final c = _customerController.customer.value;
+        nameCtrl.text = c.customerName ?? '';
+        emailCtrl.text = c.customerEmail ?? '';
+        phoneCtrl.text = c.customerPhone ?? '';
+        addressCtrl.text = c.addressOne ?? '';
+        cityCtrl.text = c.city ?? '';
+        stateCtrl.text = c.state ?? '';
+        companyCtrl.text = c.customerCompany ?? '';
+
+        _matchLocationObjects(c.state, c.city);
         _customerController.isCustomerFound.value = true;
       } else {
         clearCustomerFields();
@@ -243,8 +279,9 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
       addressCtrl.clear();
       cityCtrl.clear();
       stateCtrl.clear();
-      pincodeCtrl.clear();
       companyCtrl.clear();
+      selectedStateObj = null;
+      selectedCityObj = null;
       _customerController.isCustomerFound.value = false;
     });
   }
@@ -401,7 +438,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                             addressCtrl.text.isNotEmpty ||
                             cityCtrl.text.isNotEmpty ||
                             stateCtrl.text.isNotEmpty ||
-                            pincodeCtrl.text.isNotEmpty ||
                             companyCtrl.text.isNotEmpty) {
                           return Card(
                             elevation: 2,
@@ -431,7 +467,6 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                                   _buildInfoRow('Address', addressCtrl.text),
                                   _buildInfoRow('City', cityCtrl.text),
                                   _buildInfoRow('State', stateCtrl.text),
-                                  _buildInfoRow('Pincode', pincodeCtrl.text),
                                 ],
                               ),
                             ),
@@ -445,7 +480,7 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Obx(() {
                           return DropdownButtonFormField<String>(
-                            initialValue: selectedCategoryId,
+                            value: selectedCategoryId,
                             items:
                                 _customerController.categoryList.map((
                                   category,
@@ -494,7 +529,7 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                         return _profileController.isLoading.value
                             ? const Center(child: CircularProgressIndicator())
                             : DropdownButtonFormField<String>(
-                              initialValue:
+                              value:
                                   assignedCtrl.text.isNotEmpty
                                       ? assignedCtrl.text
                                       : null,
@@ -536,19 +571,11 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                             );
                       }),
 
-                      // 🌎 Country
-                      _buildTextField(
-                        label: 'Country',
-                        controller: countryCtrl,
-                        prefixIcon: Icons.flag,
-                        floatLabel: true,
-                      ),
-
                       // ℹ️ Status
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: DropdownButtonFormField<String>(
-                          initialValue:
+                          value:
                               selectedStatus.isNotEmpty ? selectedStatus : null,
                           items:
                               _statuses.map((status) {
@@ -606,7 +633,45 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                         },
                       ),
 
-                      // 📝 Description
+                      // 📝 Location Selectors
+                      CustomSearchableDropDown<dynamic>(
+                        label: 'State',
+                        hintText: 'Select India State',
+                        items: _locationController.states,
+                        itemAsString: (s) => s['name'],
+                        selectedItem: selectedStateObj,
+                        prefixIcon: Icons.map_rounded,
+                        isRequired: true,
+                        onChanged: (val) {
+                          setState(() {
+                            selectedStateObj = val;
+                            selectedCityObj = null;
+                            stateCtrl.text = val?['name'] ?? '';
+                            cityCtrl.text = '';
+                          });
+                          if (val != null) {
+                            _locationController.fetchCitiesByState(val['id']);
+                          }
+                        },
+                      ),
+                      Obx(() => CustomSearchableDropDown<dynamic>(
+                        label: 'City',
+                        hintText: selectedStateObj == null
+                            ? 'Select State First'
+                            : 'Search City',
+                        items: _locationController.filteredCities.toList(),
+                        itemAsString: (c) => c['name'],
+                        selectedItem: selectedCityObj,
+                        prefixIcon: Icons.location_city_rounded,
+                        isRequired: true,
+                        onAddPressed: () => _showAddCityDialog(),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedCityObj = val;
+                            cityCtrl.text = val?['name'] ?? '';
+                          });
+                        },
+                      )),
                       _buildTextField(
                         label: 'Description',
                         controller: descriptionCtrl,
@@ -627,7 +692,7 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: DropdownButtonFormField<String>(
-                          initialValue:
+                          value:
                               selectedLeadType.isNotEmpty
                                   ? selectedLeadType
                                   : null,
