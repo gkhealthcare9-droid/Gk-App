@@ -17,8 +17,11 @@ class CustomersList extends StatefulWidget {
 }
 
 class _CustomersListState extends State<CustomersList> {
-  late final CustomerController _customerController;
-  late final LocationController _locationController;
+  final CustomerController _customerController = Get.find<CustomerController>();
+  final LocationController _locationController = Get.isRegistered<LocationController>() 
+      ? Get.find<LocationController>() 
+      : Get.put(LocationController());
+  
   final RxString _searchQuery = ''.obs;
   final TextEditingController _searchCtrl = TextEditingController();
   final RxString _selectedState = ''.obs;
@@ -27,16 +30,7 @@ class _CustomersListState extends State<CustomersList> {
   @override
   void initState() {
     super.initState();
-    try {
-      _customerController = Get.find<CustomerController>();
-      _locationController = Get.put(LocationController());
-    } catch (e) {
-      CustomAlert.error('Controllers not found. Please try again.');
-      Get.back();
-      return;
-    }
     _load();
-    // Update search query when text changes
     _searchCtrl.addListener(() {
       _searchQuery.value = _searchCtrl.text;
     });

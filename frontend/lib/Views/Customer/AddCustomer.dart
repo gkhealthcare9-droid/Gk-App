@@ -184,6 +184,54 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       controller: billingAddress1Controller,
                       icon: Icons.location_on_rounded,
                     ),
+                    const SizedBox(height: 12),
+                    Obx(() => CustomSearchableDropDown<dynamic>(
+                      label: 'State',
+                      items: _locationController.states,
+                      itemAsString: (item) => item['name'],
+                      selectedItem: selectedState,
+                      prefixIcon: Icons.map_rounded,
+                      isRequired: true,
+                      onChanged: (val) {
+                        setState(() {
+                          selectedState = val;
+                          selectedCity = null;
+                          billingStateController.text = val['name'];
+                          billingCityController.text = '';
+                        });
+                        if (val != null) {
+                          _locationController.fetchCitiesByState(val['id']);
+                        }
+                      },
+                    )),
+                    const SizedBox(height: 12),
+                    Obx(() => CustomSearchableDropDown<dynamic>(
+                      label: 'City',
+                      items: _locationController.filteredCities,
+                      itemAsString: (item) => item['name'],
+                      selectedItem: selectedCity,
+                      prefixIcon: Icons.location_city_rounded,
+                      isRequired: true,
+                      enabled: selectedState != null,
+                      hintText: selectedState == null ? 'Select State First' : 'Select City',
+                      onChanged: (val) {
+                        setState(() {
+                          selectedCity = val;
+                          billingCityController.text = val['name'];
+                        });
+                      },
+                      showAddButton: selectedState != null,
+                      onAddPressed: _showAddCityDialog,
+                    )),
+                    const SizedBox(height: 12),
+                    CustomTextField(
+                      label: 'Pincode',
+                      hintText: '6-digit pincode',
+                      controller: billingPincodeController,
+                      icon: Icons.pin_drop_rounded,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                    ),
                     const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
