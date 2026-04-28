@@ -23,7 +23,7 @@ class AddCustomerScreen extends StatefulWidget {
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
   final CustomerController _customerController = Get.find<CustomerController>();
-  final LocationController _locationController = Get.put(LocationController());
+  late final LocationController _locationController;
   
   final TextEditingController nameController               = TextEditingController();
   final TextEditingController phoneController              = TextEditingController();
@@ -43,6 +43,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   @override
   void initState() {
     super.initState();
+    _locationController = Get.isRegistered<LocationController>() 
+        ? Get.find<LocationController>() 
+        : Get.put(LocationController());
+
     if (widget.index != null) {
       final customer = _customerController.customers
           .firstWhereOrNull((c) => c.id == widget.index);
@@ -185,44 +189,53 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       icon: Icons.location_on_rounded,
                     ),
                     const SizedBox(height: 12),
-                    Obx(() => CustomSearchableDropDown<dynamic>(
-                      label: 'State',
-                      items: _locationController.states,
-                      itemAsString: (item) => item['name'],
-                      selectedItem: selectedState,
-                      prefixIcon: Icons.map_rounded,
-                      isRequired: true,
-                      onChanged: (val) {
-                        setState(() {
-                          selectedState = val;
-                          selectedCity = null;
-                          billingStateController.text = val['name'];
-                          billingCityController.text = '';
-                        });
-                        if (val != null) {
-                          _locationController.fetchCitiesByState(val['id']);
-                        }
-                      },
-                    )),
+                    Obx(() {
+                      final items = _locationController.states.toList();
+                      return CustomSearchableDropDown<dynamic>(
+                        label: 'State',
+                        items: items,
+                        itemAsString: (item) => item['name'],
+                        selectedItem: selectedState,
+                        prefixIcon: Icons.map_rounded,
+                        isRequired: true,
+                        onChanged: (val) {
+                          setState(() {
+                            selectedState = val;
+                            selectedCity = null;
+                            billingStateController.text = val['name'];
+                            billingCityController.text = '';
+                          });
+                          if (val != null) {
+                            _locationController.fetchCitiesByState(val['id']);
+                          }
+                        },
+                      );
+                    }),
                     const SizedBox(height: 12),
-                    Obx(() => CustomSearchableDropDown<dynamic>(
-                      label: 'City',
-                      items: _locationController.filteredCities,
-                      itemAsString: (item) => item['name'],
-                      selectedItem: selectedCity,
-                      prefixIcon: Icons.location_city_rounded,
-                      isRequired: true,
-                      enabled: selectedState != null,
-                      hintText: selectedState == null ? 'Select State First' : 'Select City',
-                      onChanged: (val) {
-                        setState(() {
-                          selectedCity = val;
-                          billingCityController.text = val['name'];
-                        });
-                      },
-                      showAddButton: selectedState != null,
-                      onAddPressed: _showAddCityDialog,
-                    )),
+                    Obx(() {
+                      final items = _locationController.filteredCities.toList();
+                      final isLoading = _locationController.isLoading.value;
+                      return CustomSearchableDropDown<dynamic>(
+                        label: 'City',
+                        items: items,
+                        itemAsString: (item) => item['name'],
+                        selectedItem: selectedCity,
+                        prefixIcon: Icons.location_city_rounded,
+                        isRequired: true,
+                        enabled: selectedState != null,
+                        hintText: selectedState == null 
+                            ? 'Select State First' 
+                            : (isLoading ? 'Loading...' : 'Select City'),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedCity = val;
+                            billingCityController.text = val['name'];
+                          });
+                        },
+                        showAddButton: selectedState != null,
+                        onAddPressed: _showAddCityDialog,
+                      );
+                    }),
                     const SizedBox(height: 12),
                     CustomTextField(
                       label: 'Pincode',
