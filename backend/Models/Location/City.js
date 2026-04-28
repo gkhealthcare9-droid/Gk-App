@@ -25,7 +25,7 @@ const City = sequelize.define('City', {
   indexes: [
     {
       unique: true,
-      fields: ['name', 'stateId']
+      fields: ['stateId', 'name']
     }
   ]
 });
