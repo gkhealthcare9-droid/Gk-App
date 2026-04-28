@@ -283,51 +283,7 @@ class _vendorviewState extends State<vendorview> {
                     ),
                   )
                 else
-                  ..._vendorController.employees.map((e) => _cardContainer(
-                    children: [
-                      _buildDetailRowWithEdit(
-                        icon: Icons.person,
-                        label: 'Name',
-                        value: e.name ?? '',
-                        onEdit: () {
-                          Get.to(() => EditVendorEmployeeScreen(
-                            employee: e,
-                            vendorId: widget.vendor.id!,
-                          ));
-                        },
-                        onDelete: () {
-                          if (e.id != null) {
-                            showDeleteDialog(
-                              title: 'Delete Employee?',
-                              message: 'Are you sure you want to delete this employee?',
-                              onConfirm: () {
-                                _vendorController.deleteVendorEmployee(e.id!, widget.vendor.id!);
-                              },
-                            );
-                          } else {
-                            CustomAlert.showError(context: context, message: 'Invalid employee ID');
-                          }
-                        },
-                      ),
-                      _buildPhoneRow(
-                        icon: Icons.phone,
-                        label: 'Ph',
-                        value: e.phone ?? '',
-                        onCall: () => _launchPhoneCall(e.phone),
-                      ),
-                      _buildDetailRow(
-                        Icons.business,
-                        'email',
-                        c.vendorEmail ?? 'N/A',
-                      ),
-                      _buildDetailRow(
-                        Icons.cake,
-                        'DOB',
-                        e.dob != null ? DateFormat('dd-MM-yyyy').format(e.dob!) : '',
-                      ),
-                      _buildDetailRow(Icons.work, 'Position', e.position?.category ?? ''),
-                    ],
-                  )),
+                  ..._vendorController.employees.map((e) => _buildEmployeeCard(e, c)),
                 const SizedBox(height: 24),
 
                 // _sectionTitle(
@@ -461,6 +417,180 @@ class _vendorviewState extends State<vendorview> {
     );
   }
 
+  Widget _buildEmployeeCard(dynamic e, VendorModel v) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Name and Admin Actions
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: AppColors.primaryBlue,
+                  radius: 18,
+                  child: Icon(Icons.person, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        e.name ?? 'N/A',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                      ),
+                      if (e.position?.category != null)
+                        Text(
+                          e.position!.category!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.black.withOpacity(0.6),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (_userType == 'admin') ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.accentBlue, size: 20),
+                    onPressed: () => Get.to(() => EditVendorEmployeeScreen(employee: e, vendorId: v.id!)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                    onPressed: () {
+                      if (e.id != null) {
+                        showDeleteDialog(
+                          title: 'Delete Employee?',
+                          message: 'Are you sure you want to delete this employee?',
+                          onConfirm: () {
+                            _vendorController.deleteVendorEmployee(e.id!, v.id!);
+                          },
+                        );
+                      }
+                    },
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: AppColors.softGrey),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (e.email?.isNotEmpty == true) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.email_outlined, size: 16, color: AppColors.accentBlue),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          e.email!,
+                          style: const TextStyle(fontSize: 13, color: AppColors.black),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (e.phone?.isNotEmpty == true)
+                  _phoneActionRow(e.phone, 'Primary'),
+                if (e.dob != null) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.cake_outlined, size: 16, color: AppColors.accentBlue),
+                      const SizedBox(width: 8),
+                      Text(
+                        'DOB: ${DateFormat('dd-MM-yyyy').format(e.dob!)}',
+                        style: const TextStyle(fontSize: 13, color: AppColors.black),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _phoneActionRow(String? phone, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: AppColors.grey, fontWeight: FontWeight.bold),
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                phone ?? 'N/A',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black),
+              ),
+            ),
+            _actionButton(
+              icon: Icons.call,
+              color: AppColors.accentBlue,
+              onTap: () => _launchPhoneCall(phone),
+            ),
+            const SizedBox(width: 8),
+            _actionButton(
+              icon: FontAwesomeIcons.whatsapp,
+              color: Colors.green,
+              onTap: () => _openWhatsApp(phone),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _actionButton({required dynamic icon, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: icon is IconData ? Icon(icon, size: 18, color: color) : FaIcon(icon, size: 18, color: color),
+      ),
+    );
+  }
+
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -476,105 +606,6 @@ class _vendorviewState extends State<vendorview> {
     );
   }
 
-  Widget _buildDetailRowWithEdit({
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onEdit,
-    required VoidCallback onDelete,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: Colors.blue),
-          const SizedBox(width: 10),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w600)),
-          Expanded(child: Text(value)),
-        if (_userType == 'admin') ...[
-
-    IconButton(
-            icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
-            onPressed: onEdit,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-            onPressed: onDelete,
-          ),
-        ],
-    ]
-      ),
-    );
-  }
-
-  Widget _buildPhoneRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onCall,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 1) Leading phone‐type icon inside a light‐blue circle
-          Container(
-
-            child: Icon(icon, size: 20, color: Colors.blue),
-          ),
-
-          const SizedBox(width: 12),
-
-          // 2) Label and phone number text
-          Text(
-            '$label:',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(width: 6),
-          Expanded(child: Text(value)),
-
-          // 3) Spacing before action icons
-          const SizedBox(width: 8),
-
-          // 4) Phone‐call button inside a light‐green circle
-          GestureDetector(
-            onTap: onCall,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.purple.shade100,
-                shape: BoxShape.circle,
-              ),
-              padding: const EdgeInsets.all(8),
-              child: const Icon(Icons.call, color: Colors.blueAccent, size: 27),
-            ),
-          ),
-
-          const SizedBox(width: 20),
-
-          // 5) WhatsApp button inside a light‐green circle
-          GestureDetector(
-            onTap: () => _openWhatsApp(value),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.yellow.shade100,
-                shape: BoxShape.circle,
-              ),
-              padding: const EdgeInsets.all(8),
-              child: const FaIcon(
-                FontAwesomeIcons.whatsapp,
-                color: Colors.green,
-                size: 30,
-              ),
-            ),
-          ),
-        ],
-      ),
-
-    );
-
-  }
 
   Widget _sectionTitle(String title, {Widget? trailing}) {
     return Padding(
@@ -607,7 +638,7 @@ class _vendorviewState extends State<vendorview> {
             offset: const Offset(0, 2),
           )
         ],
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -500,18 +500,14 @@ class _CustomerViewState extends State<CustomerView> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: AppColors.softGrey, width: 1),
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header: Name and Admin Actions
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              color: AppColors.paleBlue,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
               children: [
                 const CircleAvatar(
@@ -558,7 +554,7 @@ class _CustomerViewState extends State<CustomerView> {
               ],
             ),
           ),
-          
+
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -1072,7 +1068,7 @@ class _CustomerViewState extends State<CustomerView> {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.softGrey, width: 1),
+          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withOpacity(0.03),

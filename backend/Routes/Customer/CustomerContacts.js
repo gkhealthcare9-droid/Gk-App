@@ -27,6 +27,38 @@ router.get('/position', async (req, res) => {
     }
   });
 
+// Update position
+router.put('/position/:id', userAuth, async (req, res) => {
+  try {
+    const { position } = req.body;
+    const item = await ContactPosition.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Position not found' });
+    await item.update({ position });
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating position', error: err.message });
+  }
+});
+
+// Delete position
+router.delete('/position/:id', userAuth, async (req, res) => {
+  try {
+    const item = await ContactPosition.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Position not found' });
+
+    // Check if being used by any contact
+    const count = await CustomerContact.count({ where: { positionId: req.params.id } });
+    if (count > 0) {
+      return res.status(400).json({ message: 'Cannot delete position that is assigned to contacts' });
+    }
+
+    await item.destroy();
+    res.json({ message: 'Position deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting position', error: err.message });
+  }
+});
+
 // ────────────── Contact Routes ──────────────
 // Create contact
 router.post('/add', userAuth, async (req, res) => {

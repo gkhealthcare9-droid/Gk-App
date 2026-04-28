@@ -69,6 +69,27 @@ class CustomerServices {
     }
   }
 
+  Future<Response> updateContactPosition(String id, String position) async {
+    try {
+      return await _dio.put(
+        '${AppConstants.CONTACT_POSITION}/$id',
+        data: {"position": position},
+      );
+    } catch (e) {
+      print('Error updating contact position: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> deleteContactPosition(String id) async {
+    try {
+      return await _dio.delete('${AppConstants.CONTACT_POSITION}/$id');
+    } catch (e) {
+      print('Error deleting contact position: $e');
+      rethrow;
+    }
+  }
+
   Future<List<GetCategoryModel>?> fetchCategoriesByType(String type) async {
     try {
       final response = await _dio.get('${AppConstants.CATEGORY}?type=$type');
@@ -82,6 +103,39 @@ class CustomerServices {
     } catch (e) {
       print('Error fetching categories: $e');
       return null;
+    }
+  }
+
+  Future<Response> addStaffCategory(String category) async {
+    try {
+      return await _dio.post(
+        '${AppConstants.Employee}/category',
+        data: {"category": category},
+      );
+    } catch (e) {
+      print('Error adding staff category: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> updateStaffCategory(String id, String category) async {
+    try {
+      return await _dio.put(
+        '${AppConstants.Employee}/category/$id',
+        data: {"category": category},
+      );
+    } catch (e) {
+      print('Error updating staff category: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> deleteStaffCategory(String id) async {
+    try {
+      return await _dio.delete('${AppConstants.Employee}/category/$id');
+    } catch (e) {
+      print('Error deleting staff category: $e');
+      rethrow;
     }
   }
 

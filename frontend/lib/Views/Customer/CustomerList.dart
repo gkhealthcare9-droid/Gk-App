@@ -46,6 +46,7 @@ class _CustomersListState extends State<CustomersList> {
     if (_locationController.filteredCities.isEmpty) return [];
     final list = _locationController.filteredCities
         .map((c) => c['name'].toString())
+        .toSet() // Ensure unique names in dropdown
         .toList();
     list.sort();
     return list;
@@ -55,6 +56,7 @@ class _CustomersListState extends State<CustomersList> {
     if (_locationController.states.isEmpty) return [];
     final all = _locationController.states
         .map((s) => s['name'].toString())
+        .toSet() // Ensure unique names
         .toList();
     all.sort();
     return all;
@@ -155,7 +157,6 @@ class _CustomersListState extends State<CustomersList> {
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Obx(() {
-                // Recompute the filtered length here exactly as below
                 final filteredCount = _customerController.customers.where((c) {
                   final matchesSearch = _matchesSearch(c);
                   final matchesState =
@@ -207,10 +208,10 @@ class _CustomersListState extends State<CustomersList> {
                           _locationController.filteredCities.clear();
                           if (_selectedState.value.isNotEmpty) {
                             final stateData = _locationController.states.firstWhere(
-                                (s) => s['name'] == _selectedState.value,
+                                (s) => s['name'].toString().trim().toLowerCase() == _selectedState.value.trim().toLowerCase(),
                                 orElse: () => null);
-                            if (stateData != null) {
-                              _locationController.fetchCitiesByState(stateData['id']);
+                            if (stateData != null && stateData['id'] != null) {
+                              _locationController.fetchCitiesByState(int.parse(stateData['id'].toString()));
                             }
                           }
                         },
@@ -222,7 +223,7 @@ class _CustomersListState extends State<CustomersList> {
                         isExpanded: true,
                         value: _selectedCity.value.isEmpty ? null : _selectedCity.value,
                         decoration: InputDecoration(
-                          hintText: 'Filter by City',
+                          hintText: _locationController.isLoading.value ? 'Loading...' : 'Filter by City',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -260,7 +261,6 @@ class _CustomersListState extends State<CustomersList> {
               ],
             ),
           ),
-
 
           Expanded(
             child: Obx(() {
@@ -359,7 +359,6 @@ class _CustomersListState extends State<CustomersList> {
           ),
         ],
       ),
-
     );
-}
+  }
 }

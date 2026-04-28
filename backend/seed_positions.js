@@ -11,11 +11,11 @@ async function seedPositions() {
         'Doctor',
         'Nurse',
         'Technician',
-        'Administrator',
-        'Purchase Manager',
+        'Admin',
+        'Purchase',
         'Biomedical Engineer',
-        'HOD',
-        'Clerk'
+        'Accounts',
+        'Nephrologist'
       ];
       for (const pos of defaultPositions) {
         await ContactPosition.create({ position: pos });

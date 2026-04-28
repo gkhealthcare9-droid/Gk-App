@@ -21,8 +21,8 @@ class AppConstants {
   static const String VENDOREMPLOYEECATEGORY = '/api/v1/vendor-employee/category';
 
   // employee (Internal Staff)
-  static const String Employee = '/api/v1/user/all';
-  static const String EmployeeCategory = '/api/v1/employee/category';
+  static const String Employee = '/api/v1/customer/employee';
+  static const String EmployeeCategory = '/api/v1/customer/employee/category';
 
   // customer contact (Hospital Side)
   static const String CUSTOMER_CONTACT = '/api/v1/customer-contact';

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:sales_grow/Helpers/download_helper.dart'
     if (dart.library.html) 'package:sales_grow/Helpers/download_helper_web.dart';
@@ -125,6 +126,47 @@ class CustomerController extends GetxController {
     }
   }
 
+  Future<void> updateContactPosition(String id, String position) async {
+    isLoading.value = true;
+    try {
+      final response = await _customerServices.updateContactPosition(id, position);
+      if (response.statusCode == 200) {
+        CustomAlert.success('Position updated successfully');
+        await fetchContactPositions();
+      } else {
+        CustomAlert.error('Failed to update position');
+      }
+    } catch (e) {
+      CustomAlert.error('Error updating position: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteContactPosition(dynamic id) async {
+    isLoading.value = true;
+    try {
+      final String idStr = id.toString();
+      final response = await _customerServices.deleteContactPosition(idStr);
+      if (response.statusCode == 200) {
+        CustomAlert.success('Position deleted successfully');
+        await fetchContactPositions();
+      } else {
+        // The backend might return 400 if it's in use
+        String msg = response.data?['message'] ?? 'Failed to delete position';
+        CustomAlert.error(msg);
+      }
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        CustomAlert.error(e.response?.data['message'] ?? 'Error deleting position');
+      } else {
+        CustomAlert.error('Error deleting position: $e');
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   var isPositionsLoading = false.obs;
 
   Future<void> fetchContactPositions() async {
@@ -158,6 +200,56 @@ class CustomerController extends GetxController {
       }
     } catch (e) {
       CustomAlert.error("Failed to fetch staff categories: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> addEmployeeCategory(String category) async {
+    isLoading.value = true;
+    try {
+      final response = await _customerServices.addStaffCategory(category);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        CustomAlert.success('Category added successfully');
+        await fetchEmployeeCategories();
+      }
+    } catch (e) {
+      CustomAlert.error('Error adding category: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateEmployeeCategory(String id, String category) async {
+    isLoading.value = true;
+    try {
+      final response = await _customerServices.updateStaffCategory(id, category);
+      if (response.statusCode == 200) {
+        CustomAlert.success('Category updated successfully');
+        await fetchEmployeeCategories();
+      }
+    } catch (e) {
+      CustomAlert.error('Error updating category: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteEmployeeCategory(dynamic id) async {
+    isLoading.value = true;
+    try {
+      final String idStr = id.toString();
+      final response = await _customerServices.deleteStaffCategory(idStr);
+      if (response.statusCode == 200) {
+        CustomAlert.success('Category deleted successfully');
+        await fetchEmployeeCategories();
+      }
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        CustomAlert.error(e.response?.data['message'] ?? 'Error deleting category');
+      } else {
+        CustomAlert.error('Error deleting category: $e');
+      }
     } finally {
       isLoading.value = false;
     }

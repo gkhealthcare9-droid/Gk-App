@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:sales_grow/Models/Employee/add_vendor_employee_model.dart';
 import 'package:sales_grow/Models/Vendor/Vendor.dart';
@@ -54,7 +55,7 @@ class VendorController extends GetxController {
     if (isLoading.value) return;
     isLoading.value = true;
     try {
-      final fetched = await _VendorServices.fetchCategory();
+      final fetched = await _VendorServices.fetchCategories();
       if (fetched != null) {
         categoryList.assignAll(fetched);
       } else {
@@ -62,6 +63,56 @@ class VendorController extends GetxController {
       }
     } catch (e) {
       CustomAlert.error("Failed to fetch categories: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> addCategory(String category) async {
+    isLoading.value = true;
+    try {
+      final response = await _VendorServices.addCategory(category);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        CustomAlert.success('Category added successfully');
+        await fetchCategories();
+      }
+    } catch (e) {
+      CustomAlert.error('Error adding category: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateCategory(String id, String category) async {
+    isLoading.value = true;
+    try {
+      final response = await _VendorServices.updateCategory(id, category);
+      if (response.statusCode == 200) {
+        CustomAlert.success('Category updated successfully');
+        await fetchCategories();
+      }
+    } catch (e) {
+      CustomAlert.error('Error updating category: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteCategory(dynamic id) async {
+    isLoading.value = true;
+    try {
+      final String idStr = id.toString();
+      final response = await _VendorServices.deleteCategory(idStr);
+      if (response.statusCode == 200) {
+        CustomAlert.success('Category deleted successfully');
+        await fetchCategories();
+      }
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        CustomAlert.error(e.response?.data['message'] ?? 'Error deleting category');
+      } else {
+        CustomAlert.error('Error deleting category: $e');
+      }
     } finally {
       isLoading.value = false;
     }

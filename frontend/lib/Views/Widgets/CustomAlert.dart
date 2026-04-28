@@ -39,8 +39,10 @@ class CustomAlert {
 
   /// Internal method to show GetX snackbar.
   static void _show(Color color, String message, String title, IconData icon) {
+    // If we're already closing a snackbar, don't trigger another one immediately
+    // to avoid animation sync issues.
     if (Get.isSnackbarOpen) {
-       Get.closeCurrentSnackbar();
+       return; 
     }
 
     Get.snackbar(
@@ -54,7 +56,6 @@ class CustomAlert {
       icon: Icon(icon, color: Colors.white),
       duration: const Duration(seconds: 3),
       isDismissible: true,
-      forwardAnimationCurve: Curves.easeOutBack,
     );
   }
 }

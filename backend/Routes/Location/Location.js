@@ -77,21 +77,23 @@ router.get('/cities', auth, async (req, res) => {
 
 router.get('/cities/by-state/:stateId', async (req, res) => {
   try {
+    const sId = req.params.stateId;
+    console.log(`--- API: Fetching cities for stateId: ${sId} ---`);
+
     const cities = await City.findAll({
-      where: { stateId: req.params.stateId },
+      where: { stateId: sId },
+      attributes: [
+        [City.sequelize.fn('MIN', City.sequelize.col('id')), 'id'],
+        'name'
+      ],
+      group: ['name'],
       order: [['name', 'ASC']]
     });
 
-    const uniqueCities = [];
-    const seenNames = new Set();
-    for (const city of cities) {
-      if (!seenNames.has(city.name)) {
-        seenNames.add(city.name);
-        uniqueCities.push(city);
-      }
-    }
-    res.json(uniqueCities);
+    console.log(`--- API: Found ${cities.length} unique cities for stateId: ${sId} ---`);
+    res.json(cities);
   } catch (err) {
+    console.error('--- API Error (cities/by-state):', err.message);
     res.status(500).json({ error: err.message });
   }
 });

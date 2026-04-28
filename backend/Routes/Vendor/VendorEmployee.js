@@ -17,10 +17,42 @@ router.post('/category', userAuth, async (req, res) => {
 // Get all categories
 router.get('/category', userAuth, async (req, res) => {
   try {
-    const categories = await VendorEmployeeCategory.findAll({ order: [['createdAt', 'DESC']] });
+    const categories = await VendorEmployeeCategory.findAll({ order: [['category', 'ASC']] });
     res.json(categories);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching categories', error: err.message });
+  }
+});
+
+// Update category
+router.put('/category/:id', userAuth, async (req, res) => {
+  try {
+    const { category } = req.body;
+    const item = await VendorEmployeeCategory.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Category not found' });
+    await item.update({ category });
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating category', error: err.message });
+  }
+});
+
+// Delete category
+router.delete('/category/:id', userAuth, async (req, res) => {
+  try {
+    const item = await VendorEmployeeCategory.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Category not found' });
+
+    // Check if being used
+    const count = await VendorEmployee.count({ where: { positionId: req.params.id } });
+    if (count > 0) {
+      return res.status(400).json({ message: 'Cannot delete category that is assigned to employees' });
+    }
+
+    await item.destroy();
+    res.json({ message: 'Category deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting category', error: err.message });
   }
 });
 

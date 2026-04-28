@@ -8,7 +8,7 @@ class StateModel {
 
   factory StateModel.fromJson(Map<String, dynamic> json) {
     return StateModel(
-      id: json['id'],
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
       name: json['name'],
     );
   }
@@ -29,9 +29,9 @@ class CityModel {
 
   factory CityModel.fromJson(Map<String, dynamic> json) {
     return CityModel(
-      id: json['id'],
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
       name: json['name'],
-      stateId: json['stateId'],
+      stateId: json['stateId'] is int ? json['stateId'] : int.tryParse(json['stateId']?.toString() ?? ''),
       state: json['State'] != null ? StateModel.fromJson(json['State']) : null,
     );
   }

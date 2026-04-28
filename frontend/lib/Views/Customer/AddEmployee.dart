@@ -46,6 +46,63 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     super.dispose();
   }
 
+  void _managePositions() {
+    Get.bottomSheet(
+      isScrollControlled: true,
+      Container(
+        height: Get.height * 0.8,
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Manage Positions",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close)),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: Obx(() => ListView.builder(
+                    itemCount: _customerController.contactPositionList.length,
+                    itemBuilder: (context, index) {
+                      final pos = _customerController.contactPositionList[index];
+                      return ListTile(
+                        title: Text(pos.position ?? ''),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _showEditPositionDialog(pos.id!, pos.position!),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _confirmDeletePosition(pos.id!, pos.position!),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  )),
+            ),
+            CustomButton(
+              onTap: _showAddPositionDialog,
+              buttonText: "ADD NEW POSITION",
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showAddPositionDialog() {
     final TextEditingController positionController = TextEditingController();
     Get.defaultDialog(
@@ -78,6 +135,56 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     );
   }
 
+  void _showEditPositionDialog(String id, String currentName) {
+    final TextEditingController positionController = TextEditingController(text: currentName);
+    Get.defaultDialog(
+      title: "Edit Position",
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: CustomTextField(
+          label: 'Position Name',
+          hintText: 'e.g. Accountant',
+          controller: positionController,
+          icon: Icons.work,
+        ),
+      ),
+      confirm: TextButton(
+        onPressed: () async {
+          final pos = positionController.text.trim();
+          if (pos.isNotEmpty) {
+            Get.back(); // close dialog
+            await _customerController.updateContactPosition(id, pos);
+          } else {
+            CustomAlert.error("Position name cannot be empty");
+          }
+        },
+        child: const Text("UPDATE"),
+      ),
+      cancel: TextButton(
+        onPressed: () => Get.back(),
+        child: const Text("CANCEL"),
+      ),
+    );
+  }
+
+  void _confirmDeletePosition(String id, String name) {
+    Get.defaultDialog(
+      title: "Delete Position",
+      middleText: "Are you sure you want to delete '$name'?",
+      confirm: TextButton(
+        onPressed: () async {
+          Get.back();
+          await _customerController.deleteContactPosition(id);
+        },
+        child: const Text("DELETE", style: TextStyle(color: Colors.red)),
+      ),
+      cancel: TextButton(
+        onPressed: () => Get.back(),
+        child: const Text("CANCEL"),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,9 +194,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: _showAddPositionDialog,
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: "Add new position type",
+            onPressed: _managePositions,
+            icon: const Icon(Icons.settings),
+            tooltip: "Manage positions",
           )
         ],
       ),

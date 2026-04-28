@@ -49,6 +49,39 @@ class LoginService {
     }
   }
 
+  Future<Response> addCategory(String category) async {
+    try {
+      return await _dio.post(
+        '${AppConstants.Employee}/category',
+        data: {"category": category},
+      );
+    } catch (e) {
+      print('Error adding employee category: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> updateCategory(String id, String category) async {
+    try {
+      return await _dio.put(
+        '${AppConstants.Employee}/category/$id',
+        data: {"category": category},
+      );
+    } catch (e) {
+      print('Error updating employee category: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> deleteCategory(String id) async {
+    try {
+      return await _dio.delete('${AppConstants.Employee}/category/$id');
+    } catch (e) {
+      print('Error deleting employee category: $e');
+      rethrow;
+    }
+  }
+
   Future<Response?> fetchEmployees(String id) async {
     try {
       final response = await _dio.get(

@@ -71,7 +71,7 @@ class VendorServices {
     }
   }
 
-  Future<List<GetCategoryModel>?> fetchCategory() async {
+  Future<List<GetCategoryModel>?> fetchCategories() async {
     try {
       final response = await _dio.get(AppConstants.VENDOREMPLOYEECATEGORY);
 
@@ -82,8 +82,41 @@ class VendorServices {
       }
       return null;
     } catch (e) {
-      print('Error fetching categories: $e');
+      print('Error fetching vendor employee categories: $e');
       return null;
+    }
+  }
+
+  Future<Response> addCategory(String category) async {
+    try {
+      return await _dio.post(
+        AppConstants.VENDOREMPLOYEECATEGORY,
+        data: {"category": category},
+      );
+    } catch (e) {
+      print('Error adding vendor employee category: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> updateCategory(String id, String category) async {
+    try {
+      return await _dio.put(
+        '${AppConstants.VENDOREMPLOYEECATEGORY}/$id',
+        data: {"category": category},
+      );
+    } catch (e) {
+      print('Error updating vendor employee category: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> deleteCategory(String id) async {
+    try {
+      return await _dio.delete('${AppConstants.VENDOREMPLOYEECATEGORY}/$id');
+    } catch (e) {
+      print('Error deleting vendor employee category: $e');
+      rethrow;
     }
   }
 
