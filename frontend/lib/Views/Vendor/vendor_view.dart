@@ -105,6 +105,7 @@ class _vendorviewState extends State<vendorview> {
     required String title,
     required String message,
     required VoidCallback onConfirm,
+    bool shouldPopView = false,
   }) {
     Get.dialog(
       AlertDialog(
@@ -121,7 +122,9 @@ class _vendorviewState extends State<vendorview> {
             onPressed: () {
               Get.back(); // close dialog first
               onConfirm(); // then call action
-              Get.back();
+              if (shouldPopView) {
+                Get.back();
+              }
             },
             child: const Text('Delete'),
           ),
@@ -221,13 +224,14 @@ class _vendorviewState extends State<vendorview> {
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
                           if (widget.vendor.id != null) {
-                            showDeleteDialog(
-                              title: 'Delete Vendor?',
-                              message: 'Are you sure you want to delete this vendor?',
-                              onConfirm: () {
-                                _vendorController.deletevendor(widget.vendor.id!);
-                              },
-                            );
+                                showDeleteDialog(
+                                  title: 'Delete Vendor?',
+                                  message: 'Are you sure you want to delete this vendor?',
+                                  shouldPopView: true,
+                                  onConfirm: () {
+                                    _vendorController.deletevendor(widget.vendor.id!);
+                                  },
+                                );
                           } else {
                             CustomAlert.showError(context: context, message: 'Invalid vendor ID');
                           }
@@ -286,128 +290,128 @@ class _vendorviewState extends State<vendorview> {
                   ..._vendorController.employees.map((e) => _buildEmployeeCard(e, c)),
                 const SizedBox(height: 24),
 
-                // _sectionTitle(
-                //   'Customer Products',
-                //   trailing: ElevatedButton.icon(
-                //     onPressed: _onAddProductPressed,
-                //     icon: const Icon(Icons.add, size: 18),
-                //     label: const Text('Add Product'),
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: Colors.blue,
-                //       foregroundColor: Colors.white,
-                //       padding: const EdgeInsets.symmetric(
-                //         horizontal: 12,
-                //         vertical: 8,
-                //       ),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(8),
-                //       ),
-                //       textStyle: const TextStyle(
-                //         fontSize: 14,
-                //         fontWeight: FontWeight.w600,
-                //       ),
-                //       elevation: 0,
-                //     ),
-                //   ),
-                // ),
-                //
-                // const SizedBox(height: 12),
-                //
-                // if (_addedProducts.isEmpty)
-                //   const Padding(
-                //     padding: EdgeInsets.symmetric(vertical: 12),
-                //     child: Text(
-                //       'No products added.',
-                //       style: TextStyle(color: Colors.grey),
-                //     ),
-                //   )
-                // else
-                //   ..._addedProducts.map((prod) {
-                //     return Padding(
-                //       padding: const EdgeInsets.only(bottom: 12),
-                //       child: _cardContainer(
-                //         children: [
-                //           // 1) Category (always present)
-                //           _buildDetailRow(
-                //             Icons.category,
-                //             'Category',
-                //             prod['category'] ?? 'N/A',
-                //           ),
-                //
-                //           // 2) Dialysis Machine subfields (only if category = “Dialysis Machine”)
-                //           if (prod['category'] == 'Dialysis Machine') ...[
-                //             const SizedBox(height: 8),
-                //             const Divider(),
-                //             const SizedBox(height: 8),
-                //
-                //             _buildDetailRow(
-                //               Icons.build,
-                //               'Make',
-                //               prod['make'] ?? 'N/A',
-                //             ),
-                //             _buildDetailRow(
-                //               Icons.settings,
-                //               'Model',
-                //               prod['model'] ?? 'N/A',
-                //             ),
-                //             _buildDetailRow(
-                //               Icons.confirmation_num,
-                //               'Qty',
-                //               prod['qty'] ?? 'N/A',
-                //             ),
-                //             _buildDetailRow(
-                //               Icons.tag,
-                //               'Serial No',
-                //               prod['serialNo'] ?? 'N/A',
-                //             ),
-                //             _buildDetailRow(
-                //               Icons.date_range,
-                //               'AMC Start Date',
-                //               prod['amcStart'] != null
-                //                   ? DateFormat('dd/MM/yyyy').format(
-                //                 DateTime.parse(prod['amcStart']!),
-                //               )
-                //                   : 'N/A',
-                //             ),
-                //             _buildDetailRow(
-                //               Icons.date_range,
-                //               'AMC End Date',
-                //               prod['amcEnd'] != null
-                //                   ? DateFormat('dd/MM/yyyy').format(
-                //                 DateTime.parse(prod['amcEnd']!),
-                //               )
-                //                   : 'N/A',
-                //             ),
-                //           ],
-                //
-                //           // 3) Telle Response (always present)
-                //           _buildDetailRow(
-                //             Icons.call_to_action,
-                //             'Telle Response',
-                //             prod['telleResponse'] ?? 'N/A',
-                //           ),
-                //
-                //           // 4) Communication (always present)
-                //           _buildDetailRow(
-                //             Icons.message,
-                //             'Communication',
-                //             prod['communication'] ?? 'N/A',
-                //           ),
-                //
-                //           // 5) Follow‐Up Date (always present)
-                //           _buildDetailRow(
-                //             Icons.event,
-                //             'Follow-Up Date',
-                //             prod['followUpDate'] != null
-                //                 ? DateFormat('dd/MM/yyyy').format(
-                //               DateTime.parse(prod['followUpDate']!),
-                //             )
-                //                 : 'N/A',
-                //           ),
-                //         ],
-                //       ),
-                //     );
-                //   }).toList(),
+                _sectionTitle(
+                  'Vendor Products',
+                  trailing: ElevatedButton.icon(
+                    onPressed: _onAddProductPressed,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add Product'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                if (_addedProducts.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'No products added.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                else
+                  ..._addedProducts.map((prod) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _cardContainer(
+                        children: [
+                          // 1) Category (always present)
+                          _buildDetailRow(
+                            Icons.category,
+                            'Category',
+                            prod['category'] ?? 'N/A',
+                          ),
+
+                          // 2) Dialysis Machine subfields (only if category = “Dialysis Machine”)
+                          if (prod['category'] == 'Dialysis Machine') ...[
+                            const SizedBox(height: 8),
+                            const Divider(),
+                            const SizedBox(height: 8),
+
+                            _buildDetailRow(
+                              Icons.build,
+                              'Make',
+                              prod['make'] ?? 'N/A',
+                            ),
+                            _buildDetailRow(
+                              Icons.settings,
+                              'Model',
+                              prod['model'] ?? 'N/A',
+                            ),
+                            _buildDetailRow(
+                              Icons.confirmation_num,
+                              'Qty',
+                              prod['qty'] ?? 'N/A',
+                            ),
+                            _buildDetailRow(
+                              Icons.tag,
+                              'Serial No',
+                              prod['serialNo'] ?? 'N/A',
+                            ),
+                            _buildDetailRow(
+                              Icons.date_range,
+                              'AMC Start Date',
+                              prod['amcStart'] != null
+                                  ? DateFormat('dd/MM/yyyy').format(
+                                DateTime.parse(prod['amcStart']!),
+                              )
+                                  : 'N/A',
+                            ),
+                            _buildDetailRow(
+                              Icons.date_range,
+                              'AMC End Date',
+                              prod['amcEnd'] != null
+                                  ? DateFormat('dd/MM/yyyy').format(
+                                DateTime.parse(prod['amcEnd']!),
+                              )
+                                  : 'N/A',
+                            ),
+                          ],
+
+                          // 3) Telle Response (always present)
+                          _buildDetailRow(
+                            Icons.call_to_action,
+                            'Telle Response',
+                            prod['telleResponse'] ?? 'N/A',
+                          ),
+
+                          // 4) Communication (always present)
+                          _buildDetailRow(
+                            Icons.message,
+                            'Communication',
+                            prod['communication'] ?? 'N/A',
+                          ),
+
+                          // 5) Follow‐Up Date (always present)
+                          _buildDetailRow(
+                            Icons.event,
+                            'Follow-Up Date',
+                            prod['followUpDate'] != null
+                                ? DateFormat('dd/MM/yyyy').format(
+                              DateTime.parse(prod['followUpDate']!),
+                            )
+                                : 'N/A',
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
               ],
             ),
 
@@ -430,7 +434,7 @@ class _vendorviewState extends State<vendorview> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.6), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,7 +642,7 @@ class _vendorviewState extends State<vendorview> {
             offset: const Offset(0, 2),
           )
         ],
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.6), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

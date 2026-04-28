@@ -20,7 +20,7 @@ const Vendor = sequelize.define('Vendor', {
   vendorQuniqueNumber: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: false,
+    allowNull: true,
   },
 }, {
   timestamps: true,

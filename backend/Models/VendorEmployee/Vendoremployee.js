@@ -9,6 +9,7 @@ const VendorEmployee = sequelize.define('VendorEmployee', {
   },
   name: { type: DataTypes.STRING, allowNull: false },
   phone: { type: DataTypes.STRING, allowNull: false },
+  email: { type: DataTypes.STRING, allowNull: true },
   dob: { type: DataTypes.DATE, allowNull: true },
   positionId: {
     type: DataTypes.BIGINT,

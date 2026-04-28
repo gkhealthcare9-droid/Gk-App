@@ -36,7 +36,7 @@ const Customer = sequelize.define('Customer', {
   },
   customerQuniqueNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: true,
   },
   addressOne: {

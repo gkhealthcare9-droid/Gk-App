@@ -1,6 +1,7 @@
 class AddvendorEmployee {
   final String? name;
   final String? phone;
+  final String? email;
   final DateTime? dob;
   final String? position;  // categoryId
   final String? vendor;  // customerId
@@ -8,6 +9,7 @@ class AddvendorEmployee {
   AddvendorEmployee({
     this.name,
     this.phone,
+    this.email,
     this.dob,
     this.position,
     this.vendor,
@@ -17,6 +19,7 @@ class AddvendorEmployee {
     return AddvendorEmployee(
       name: json['name'] as String?,
       phone: json['phone'] as String?,
+      email: json['email'] as String?,
       dob: json['dob'] != null ? DateTime.tryParse(json['dob']) : null,
       position: json['position'] as String?,
       vendor: json['vendor'] as String?,
@@ -27,6 +30,7 @@ class AddvendorEmployee {
     return {
       'name': name,
       'phone': phone,
+      'email': email,
       'dob': dob?.toIso8601String(),
       'position': position,
       'vendor': vendor,
@@ -34,11 +38,11 @@ class AddvendorEmployee {
   }
 }
 
-
 class GetvendorEmployee {
   final String? id;
   final String? name;
   final String? phone;
+  final String? email;
   final DateTime? dob;
   final Position? position;
   final Vendor? vendor;
@@ -49,6 +53,7 @@ class GetvendorEmployee {
     this.id,
     this.name,
     this.phone,
+    this.email,
     this.dob,
     this.position,
     this.vendor,
@@ -61,6 +66,7 @@ class GetvendorEmployee {
       id: (json['id'] ?? (json['id'] ?? (json['id'] ?? json['_id'])))?.toString(),
       name: json['name'] as String?,
       phone: json['phone'] as String?,
+      email: json['email'] as String?,
       dob: json['dob'] != null ? DateTime.tryParse(json['dob']) : null,
       position: json['position'] != null
           ? Position.fromJson(json['position'])
@@ -82,6 +88,7 @@ class GetvendorEmployee {
       '_id': id,
       'name': name,
       'phone': phone,
+      'email': email,
       'dob': dob?.toIso8601String(),
       'position': position?.toJson(),
       'vendor': vendor?.toJson(),

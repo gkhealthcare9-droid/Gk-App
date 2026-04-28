@@ -33,6 +33,7 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
 
   late TextEditingController nameController;
   late TextEditingController phoneController;
+  late TextEditingController emailController;
   DateTime? selectedDob;
   String? selectedPositionId;
 
@@ -43,6 +44,7 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
     // Initialize controllers with existing employee data
     nameController = TextEditingController(text: widget.employee.name);
     phoneController = TextEditingController(text: widget.employee.phone);
+    emailController = TextEditingController(text: widget.employee.email);
 
     // Pre-select the DOB if it exists
     selectedDob = widget.employee.dob;
@@ -60,6 +62,7 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
   void dispose() {
     nameController.dispose();
     phoneController.dispose();
+    emailController.dispose();
     super.dispose();
   }
 
@@ -105,6 +108,7 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
     final updatedEmployee = AddvendorEmployee(
       name: name,
       phone: phone,
+      email: emailController.text.trim(),
       dob: selectedDob,
       position: selectedPositionId,
       vendor: widget.vendorId,
@@ -182,7 +186,19 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
 
               const SizedBox(height: 16),
 
-              // 4) DOB Picker
+              // 4) Email Field
+              CustomTextField(
+                label: 'Email',
+                hintText: 'Enter email address',
+                controller: emailController,
+                obscureText: false,
+                showSuffixIcon: false,
+                icon: Icons.email,
+              ),
+
+              const SizedBox(height: 16),
+
+              // 5) DOB Picker
               InkWell(
                 onTap: _pickDob,
                 child: InputDecorator(
@@ -217,7 +233,7 @@ class _EditVendorEmployeeScreenState extends State<EditVendorEmployeeScreen> {
 
               const SizedBox(height: 40),
 
-              // 5) Update Button
+              // 6) Update Button
               CustomButton(onTap: _onUpdatePressed, buttonText: "Update"),
             ],
           ),

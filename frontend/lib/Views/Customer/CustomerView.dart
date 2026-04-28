@@ -500,7 +500,7 @@ class _CustomerViewState extends State<CustomerView> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.6), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1068,7 +1068,7 @@ class _CustomerViewState extends State<CustomerView> {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.6), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withOpacity(0.03),

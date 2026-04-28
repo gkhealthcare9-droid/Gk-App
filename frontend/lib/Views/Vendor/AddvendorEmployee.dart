@@ -28,6 +28,15 @@ class _AddvendorEmployeeScreenState extends State<AddvendorEmployeeScreen> {
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
   @override
   void initState() {
     super.initState();
@@ -74,7 +83,7 @@ class _AddvendorEmployeeScreenState extends State<AddvendorEmployeeScreen> {
                   const Text("Manage Positions",
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Get.back(),
                       icon: const Icon(Icons.close)),
                 ],
               ),
@@ -246,11 +255,10 @@ class _AddvendorEmployeeScreenState extends State<AddvendorEmployeeScreen> {
                 CustomTextField(
                   label: 'Email ',
                   hintText: 'Email ',
-                  controller: TextEditingController(), // Fix this later if needed
+                  controller: emailController,
                   obscureText: false,
                   showSuffixIcon: false,
                   icon: Icons.email,
-                  inputFormatters: [ FirstLetterCapitalFormatter() ],
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
@@ -296,6 +304,7 @@ class _AddvendorEmployeeScreenState extends State<AddvendorEmployeeScreen> {
                       position: selected!,
                       phone: phone,
                       name: name,
+                      email: emailController.text.trim(),
                       dob: selectedDate, // nullable
                       vendor: widget.id,
                     );

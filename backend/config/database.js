@@ -20,9 +20,13 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('✅ Connected to MySQL 🚀');
     // Sync models with the database
-    await sequelize.sync({ alter: false }); // Use alter: true only in dev if needed
+    await sequelize.sync({ alter: true });
+    console.log('✅ Database synchronized successfully');
   } catch (error) {
-    console.error('❌ MySQL connection error:', error.message);
+    console.error('❌ MySQL connection error:', error.name, '-', error.message);
+    if (error.errors) {
+      error.errors.forEach(err => console.error(`- Detail: ${err.message} on ${err.path}`));
+    }
     console.error('Verify your MYSQLHOST and MYSQL_URL in Railway variables.');
     // Do not process.exit(1) in production to avoid 502 loops,
     // but the app won't function without DB.
