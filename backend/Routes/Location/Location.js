@@ -77,17 +77,20 @@ router.get('/cities', auth, async (req, res) => {
 
 router.get('/cities/by-state/:stateId', async (req, res) => {
   try {
-    const { sequelize } = require('../../config/database');
     const cities = await City.findAll({
       where: { stateId: req.params.stateId },
-      attributes: [
-        [sequelize.fn('DISTINCT', sequelize.col('name')), 'name'],
-        'id'
-      ],
-      group: ['name'],
       order: [['name', 'ASC']]
     });
-    res.json(cities);
+
+    const uniqueCities = [];
+    const seenNames = new Set();
+    for (const city of cities) {
+      if (!seenNames.has(city.name)) {
+        seenNames.add(city.name);
+        uniqueCities.push(city);
+      }
+    }
+    res.json(uniqueCities);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
