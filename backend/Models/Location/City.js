@@ -22,6 +22,12 @@ const City = sequelize.define('City', {
 }, {
   timestamps: true,
   tableName: 'cities',
+  indexes: [
+    {
+      unique: true,
+      fields: ['name', 'stateId']
+    }
+  ]
 });
 
 module.exports = City;

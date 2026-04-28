@@ -77,7 +77,16 @@ router.get('/cities', auth, async (req, res) => {
 
 router.get('/cities/by-state/:stateId', async (req, res) => {
   try {
-    const cities = await City.findAll({ where: { stateId: req.params.stateId }, order: [['name', 'ASC']] });
+    const { sequelize } = require('../../config/database');
+    const cities = await City.findAll({
+      where: { stateId: req.params.stateId },
+      attributes: [
+        [sequelize.fn('DISTINCT', sequelize.col('name')), 'name'],
+        'id'
+      ],
+      group: ['name'],
+      order: [['name', 'ASC']]
+    });
     res.json(cities);
   } catch (err) {
     res.status(500).json({ error: err.message });
