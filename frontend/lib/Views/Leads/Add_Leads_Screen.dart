@@ -83,18 +83,24 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
 
     uniqueId.addListener(() {
       final text = uniqueId.text.toUpperCase();
+      
+      // Prevent infinite loop: Only update if the text isn't already correct
       if (!text.startsWith('GK')) {
-        uniqueId.text = 'GK';
-        uniqueId.selection = TextSelection.fromPosition(TextPosition(offset: uniqueId.text.length));
+        final newText = 'GK${text.replaceAll('GK', '')}';
+        uniqueId.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newText.length),
+        );
+        return;
       }
       
-      // Clear previous timer to debounce the search
       _searchDebounce?.cancel();
       
-      if (text.length >= 5) { // e.g. "GK-37" - start searching after enough digits
-        _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (text.length >= 5) { 
+        _searchDebounce = Timer(const Duration(milliseconds: 600), () {
+          if (!mounted) return;
           String codeToFetch = text;
-          if (!text.startsWith('GK-')) {
+          if (!text.contains('-')) {
             codeToFetch = 'GK-${text.substring(2)}';
           }
           fetchCustomer(codeToFetch);
