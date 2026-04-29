@@ -1,7 +1,7 @@
 class AppConstants {
   // base
-  static const String BASE_URL = 'http://10.0.2.2:3007'; // Local Backend for Emulator
-  // static const String BASE_URL = 'https://gk-app-production-45a2.up.railway.app'; // Production
+  static const String BASE_URL = 'https://gk-app-production-45a2.up.railway.app';
+  // static const String BASE_URL = 'http://10.0.2.2:3007'; // Local Backend
 
   // login
   static const String LOGIN = '/api/v1/user/login';
