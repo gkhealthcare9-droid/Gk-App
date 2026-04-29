@@ -58,6 +58,9 @@ class _CustomersListState extends State<CustomersList> {
 
   Future<void> _load() async {
     await _customerController.fetchCustomers();
+    if (_locationController.states.isEmpty) {
+      await _locationController.fetchStates();
+    }
   }
 
   bool _matchesSearch(CustomerModel c) {

@@ -272,23 +272,34 @@ class CustomerController extends GetxController {
     }
   }
 
+  final RxString _lastRequestedUnique = ''.obs;
+
   Future<void> fetchCustomerByUnique(String unique) async {
-    if (isLoading.value) return;
+    _lastRequestedUnique.value = unique;
     isLoading.value = true;
     try {
       final fetchedCustomer = await _customerServices.fetchByUnique(unique);
-      if (fetchedCustomer != null && fetchedCustomer.customerName != null) {
-        customer.value = fetchedCustomer;
-        isCustomerFound.value = true; // ✅ found
-      } else {
-        isCustomerFound.value = false; // ❌ not found
-        customer.value = CustomerModel(); // clear stale data
+      
+      // Only update if this is still the most recent request
+      if (_lastRequestedUnique.value == unique) {
+        if (fetchedCustomer != null && fetchedCustomer.customerName != null) {
+          customer.value = fetchedCustomer;
+          isCustomerFound.value = true;
+        } else {
+          isCustomerFound.value = false;
+          customer.value = CustomerModel();
+        }
       }
     } catch (e) {
-      isCustomerFound.value = false;
-      CustomAlert.error('Failed to fetch customer: $e');
+      if (_lastRequestedUnique.value == unique) {
+        isCustomerFound.value = false;
+        // Silent fail for typing experience, but log for debug
+        print('Error fetching customer by unique: $e');
+      }
     } finally {
-      isLoading.value = false;
+      if (_lastRequestedUnique.value == unique) {
+        isLoading.value = false;
+      }
     }
   }
 

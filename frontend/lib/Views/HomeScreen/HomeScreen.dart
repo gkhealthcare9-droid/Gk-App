@@ -130,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       final stats = Get.find<DashboardController>().stats;
                       return _buildModernCard('Total Staff: ${stats['employees'] ?? 0}', 'Staffing', Icons.badge_rounded, Colors.indigo, () => Get.to(() => const EmployeesListScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 400);
                     }),
-                    _buildModernCard('Onboarding', 'Add Customer', Icons.person_add_rounded, Colors.orange, () => Get.to(() => AddCustomerScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 500),
                     _buildModernCard('Procurement', 'Add Vendor', Icons.add_home_work_rounded, Colors.deepPurple, () => Get.to(() => AddVendorScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 600),
                     _buildModernCard('Analytics', 'Gen. Reports', Icons.assignment_rounded, Colors.indigo, () => Get.to(() => const ReportScreen()), 700),
                     _buildModernCard('Archive', 'View Reports', Icons.analytics_rounded, Colors.pinkAccent, () => Get.to(() => const ViewReportScreen()), 800),
@@ -144,10 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       final stats = Get.find<DashboardController>().stats;
                       final totalOutstanding = stats['totalOutstanding'] ?? 0;
                       return _buildModernCard('Outstanding: ₹$totalOutstanding', 'Payments', Icons.insights_rounded, AppColors.secondaryBlue, () => Get.to(() => const OutstandingAllScreen()), 1200);
-                    }),
-                    Obx(() {
-                      final stats = Get.find<DashboardController>().stats;
-                      return _buildModernCard('Total Leads: ${stats['leads'] ?? 0}', 'Sales', Icons.add_location_alt_rounded, Colors.brown, () => Get.to(() => const AddLeadScreen())?.then((_) => Get.find<DashboardController>().fetchStats()), 1300);
                     }),
                     _buildModernCard('Marketing', 'All Leads', Icons.map_rounded, Colors.cyan, () => Get.to(() => const LeadsScreen()), 1400),
                     Obx(() {

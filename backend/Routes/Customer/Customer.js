@@ -108,7 +108,24 @@ router.delete('/:id', userAuth, async (req, res) => {
 
 router.get('/by-unique/:uniqueNumber', userAuth, async (req, res) => {
   try {
-    const customer = await Customer.findOne({ where: { customerQuniqueNumber: req.params.uniqueNumber } });
+    const raw = req.params.uniqueNumber.trim();
+    // Try to match with and without hyphen, and case insensitive
+    const withHyphen = raw.toUpperCase().startsWith('GK') && !raw.includes('-') ? `GK-${raw.substring(2)}` : raw;
+    const withoutHyphen = raw.replace('GK-', 'GK');
+
+    const customer = await Customer.findOne({
+      where: {
+        [Op.or]: [
+          { customerQuniqueNumber: raw },
+          { customerQuniqueNumber: withHyphen },
+          { customerQuniqueNumber: withoutHyphen },
+          { customerQuniqueNumber: raw.toUpperCase() },
+          { customerQuniqueNumber: withHyphen.toUpperCase() },
+          { customerQuniqueNumber: withoutHyphen.toUpperCase() }
+        ]
+      }
+    });
+
     if (!customer) return res.status(404).json({ message: 'Customer not found' });
     res.json(customer);
   } catch (err) {

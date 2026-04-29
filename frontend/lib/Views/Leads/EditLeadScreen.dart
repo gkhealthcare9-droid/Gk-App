@@ -5,6 +5,7 @@ import '../../Controllers/AddCustomer/Customer_controller.dart';
 import '../../Controllers/AuthController/ProfileController.dart';
 import '../../Controllers/Leads/Leads_Controller.dart';
 import '../../Models/Leads/Leads_Model.dart';
+import '../../Models/CustomerContact/CustomerContactModel.dart';
 import '../Widgets/CustomAppBar.dart';
 import '../../Controllers/Location/Location_controller.dart';
 import '../Widgets/CustomSearchableDropDown.dart';
@@ -479,22 +480,22 @@ class _EditLeadScreenState extends State<EditLeadScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Obx(() {
-                          return DropdownButtonFormField<String>(
-                            value: selectedCategoryId,
+                          return DropdownButtonFormField<dynamic>(
+                            value: _customerController.categoryList.firstWhereOrNull((c) => c.id == selectedCategoryId),
                             items:
                                 _customerController.categoryList.map((
                                   category,
                                 ) {
-                                  return DropdownMenuItem<String>(
-                                    value: category.id,
-                                    child: Text(category.position ?? 'Unnamed'),
+                                  return DropdownMenuItem<dynamic>(
+                                    value: category,
+                                    child: Text((category is ContactPositionModel ? category.position : (category as dynamic).category) ?? 'Unnamed'),
                                   );
                                 }).toList(),
                             onChanged:
                                 (value) =>
-                                    setState(() => selectedCategoryId = value),
+                                    setState(() => selectedCategoryId = value?.id),
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (value == null) {
                                 return 'Please select a category';
                               }
                               return null;

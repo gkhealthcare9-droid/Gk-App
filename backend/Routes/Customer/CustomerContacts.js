@@ -63,6 +63,27 @@ router.delete('/position/:id', userAuth, async (req, res) => {
 // Create contact
 router.post('/add', userAuth, async (req, res) => {
   try {
+    // 🔍 Check for existing contact to prevent duplicates (ID Desync Fallback)
+    const existing = await CustomerContact.findOne({
+      where: {
+        customerId: req.body.customer,
+        [Op.or]: [
+          { phone: req.body.phone },
+          { name: req.body.name }
+        ]
+      }
+    });
+
+    if (existing) {
+      console.log(`ℹ️ Contact already exists for customer ${req.body.customer}. Updating instead.`);
+      await existing.update({
+        positionId: req.body.position,
+        phone2: req.body.phone2,
+        email: req.body.email
+      });
+      return res.status(200).json(existing);
+    }
+
     const contactData = {
       ...req.body,
       positionId: req.body.position,

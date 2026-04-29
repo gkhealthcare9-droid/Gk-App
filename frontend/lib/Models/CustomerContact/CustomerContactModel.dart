@@ -106,7 +106,7 @@ class ContactPositionModel {
 
   factory ContactPositionModel.fromJson(Map<String, dynamic> json) {
     return ContactPositionModel(
-      id: json['id']?.toString(),
+      id: (json['id'] ?? json['_id'])?.toString(),
       position: json['position'] as String?,
     );
   }

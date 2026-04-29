@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Controllers/AddCustomer/Customer_controller.dart';
@@ -5,6 +6,7 @@ import '../../Controllers/AuthController/ProfileController.dart';
 import '../Widgets/CustomAppBar.dart';
 import '../../Controllers/Leads/Leads_Controller.dart';
 import '../../Controllers/Product/Product.dart';
+import '../../Models/CustomerContact/CustomerContactModel.dart';
 import '../../Models/Leads/Leads_Model.dart';
 import '../Widgets/CustomSearchableDropDown.dart';
 import 'All_Leads_Screen.dart';
@@ -85,16 +87,29 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
         uniqueId.text = 'GK';
         uniqueId.selection = TextSelection.fromPosition(TextPosition(offset: uniqueId.text.length));
       }
-      if (text.length > 2) {
-        fetchCustomer(text);
-      } else {
+      
+      // Clear previous timer to debounce the search
+      _searchDebounce?.cancel();
+      
+      if (text.length >= 5) { // e.g. "GK-37" - start searching after enough digits
+        _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+          String codeToFetch = text;
+          if (!text.startsWith('GK-')) {
+            codeToFetch = 'GK-${text.substring(2)}';
+          }
+          fetchCustomer(codeToFetch);
+        });
+      } else if (text.length <= 2) {
         clearCustomerFields();
       }
     });
   }
 
+  Timer? _searchDebounce;
+
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     uniqueId.dispose();
     name.dispose();
     email.dispose();
@@ -154,7 +169,8 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
         address.text = c.addressOne ?? '';
         city.text = c.city ?? '';
         state.text = c.state ?? '';
-        company.text = c.customerCompany ?? '';
+        // Automatically display customer name in the company name field as requested
+        company.text = c.customerName ?? c.customerCompany ?? '';
         
         // Match selection objects for dropdowns
         _matchLocationObjects(c.state, c.city);
@@ -202,8 +218,19 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         title: 'Add Lead',
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Obx(() => Text(
+                '${_leadController.leads.length}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+              )),
+            ),
+          ),
+        ],
       ),
       body: Obx(() {
         if (_leadController.isLoading.value) {
@@ -388,7 +415,7 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
       label: 'Designation / Profile',
       hintText: 'Select designation',
       items: _customerController.categoryList.toList(),
-      itemAsString: (c) => c.category ?? 'Unnamed',
+      itemAsString: (c) => (c is ContactPositionModel ? c.position : (c as dynamic).category) ?? 'Unnamed',
       selectedItem: _customerController.categoryList.firstWhereOrNull((c) => c.id == selectedCategoryId),
       prefixIcon: Icons.badge_rounded,
       isRequired: true,

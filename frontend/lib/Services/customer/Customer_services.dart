@@ -36,6 +36,9 @@ class CustomerServices {
       }
       return null;
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        return null; // Silently return null for 404
+      }
       print('Error fetching customer by unique: $e');
       return null;
     }
